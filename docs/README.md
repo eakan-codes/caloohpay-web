@@ -24,6 +24,12 @@ Guides for contributors and developers:
 
 - **[Getting Started](./contributing/getting-started.md)** - Comprehensive onboarding guide for new contributors, including environment setup, development workflow, and coding conventions
 
+### [Architecture](./architecture.md)
+
+Technical architecture and design documentation:
+
+- **[System Architecture](./architecture.md)** - Complete system architecture, design decisions, data flow patterns, and technical rationale
+
 ## 🚀 Quick Start
 
 If you're new to the project:
@@ -75,7 +81,7 @@ Documentation improvements are always welcome! When contributing documentation:
 
 Future documentation planned:
 
-- **Architecture Guide** - System architecture and design patterns
+- ~~**Architecture Guide**~~ - ✅ Completed - System architecture and design patterns
 - **API Reference** - Detailed API endpoint documentation
 - **Deployment Guide** - Production deployment instructions
 - **Testing Guide** - Comprehensive testing strategies
@@ -100,8 +106,9 @@ Future documentation planned:
 **Developers**:
 
 1. See [Getting Started](./contributing/getting-started.md) for development workflow
-2. Review [NextAuth Configuration](./configuration/nextauth-setup.md) for API integration
-3. Check code comments and tests for implementation details
+2. Review [System Architecture](./architecture.md) for technical design
+3. Review [NextAuth Configuration](./configuration/nextauth-setup.md) for API integration
+4. Check code comments and tests for implementation details
 
 ### By Task
 
@@ -117,6 +124,10 @@ Future documentation planned:
 
 - [NextAuth Configuration](./configuration/nextauth-setup.md)
 - [Authentication Flow](../AUTHENTICATION.md)
+
+**Understanding system architecture**:
+
+- [System Architecture](./architecture.md)
 
 **Writing code**:
 
