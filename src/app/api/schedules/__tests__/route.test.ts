@@ -1,26 +1,63 @@
-import { GET } from '../route';
-import { NextRequest } from 'next/server';
-import { getServerSession } from 'next-auth';
+// Mock next-auth before any imports that use it
+jest.mock('next-auth', () => ({
+  getServerSession: jest.fn(),
+}));
 
-// Mock dependencies
-jest.mock('next-auth');
 jest.mock('@/lib/auth/options', () => ({
   authOptions: {},
+}));
+
+// Mock NextResponse
+jest.mock('next/server', () => ({
+  NextResponse: {
+    json: (data: unknown, init?: { status?: number }) => {
+      const response = {
+        status: init?.status || 200,
+        json: async () => data,
+        data,
+      };
+      return response;
+    },
+  },
 }));
 
 // Mock fetch
 global.fetch = jest.fn();
 
+// Helper to create a mock NextRequest
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function createMockRequest(url: string): any {
+  return {
+    url,
+    nextUrl: new URL(url),
+    method: 'GET',
+    headers: new Map(),
+  };
+}
+
 describe('/api/schedules', () => {
+  // Dynamically import after mocks are set up
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let GET: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let getServerSession: any;
+
+  beforeAll(async () => {
+    const routeModule = await import('../route');
+    GET = routeModule.GET;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getServerSession = (await import('next-auth')).getServerSession as any;
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('GET', () => {
     it('should return 401 when user is not authenticated', async () => {
-      (getServerSession as jest.Mock).mockResolvedValue(null);
+      getServerSession.mockResolvedValue(null);
 
-      const request = new NextRequest('http://localhost:3000/api/schedules');
+      const request = createMockRequest('http://localhost:3000/api/schedules');
       const response = await GET(request);
       const data = await response.json();
 
@@ -29,11 +66,11 @@ describe('/api/schedules', () => {
     });
 
     it('should return 401 when session has no access token', async () => {
-      (getServerSession as jest.Mock).mockResolvedValue({
+      getServerSession.mockResolvedValue({
         user: { id: '123', email: 'test@example.com' },
       });
 
-      const request = new NextRequest('http://localhost:3000/api/schedules');
+      const request = createMockRequest('http://localhost:3000/api/schedules');
       const response = await GET(request);
       const data = await response.json();
 
@@ -57,17 +94,18 @@ describe('/api/schedules', () => {
         },
       ];
 
-      (getServerSession as jest.Mock).mockResolvedValue({
+      getServerSession.mockResolvedValue({
         user: { id: '123' },
         accessToken: 'mock_access_token',
       });
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         json: async () => ({ schedules: mockSchedules }),
       });
 
-      const request = new NextRequest('http://localhost:3000/api/schedules');
+      const request = createMockRequest('http://localhost:3000/api/schedules');
       const response = await GET(request);
       const data = await response.json();
 
@@ -88,12 +126,13 @@ describe('/api/schedules', () => {
     });
 
     it('should handle PagerDuty API errors', async () => {
-      (getServerSession as jest.Mock).mockResolvedValue({
+      getServerSession.mockResolvedValue({
         user: { id: '123' },
         accessToken: 'mock_access_token',
       });
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global.fetch as any).mockResolvedValue({
         ok: false,
         status: 500,
         json: async () => ({
@@ -101,7 +140,7 @@ describe('/api/schedules', () => {
         }),
       });
 
-      const request = new NextRequest('http://localhost:3000/api/schedules');
+      const request = createMockRequest('http://localhost:3000/api/schedules');
       const response = await GET(request);
       const data = await response.json();
 
@@ -111,18 +150,19 @@ describe('/api/schedules', () => {
     });
 
     it('should handle 401 from PagerDuty (expired token)', async () => {
-      (getServerSession as jest.Mock).mockResolvedValue({
+      getServerSession.mockResolvedValue({
         user: { id: '123' },
         accessToken: 'expired_token',
       });
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global.fetch as any).mockResolvedValue({
         ok: false,
         status: 401,
         json: async () => ({ error: { message: 'Unauthorized' } }),
       });
 
-      const request = new NextRequest('http://localhost:3000/api/schedules');
+      const request = createMockRequest('http://localhost:3000/api/schedules');
       const response = await GET(request);
       const data = await response.json();
 
@@ -132,17 +172,18 @@ describe('/api/schedules', () => {
     });
 
     it('should pass query parameter to PagerDuty API', async () => {
-      (getServerSession as jest.Mock).mockResolvedValue({
+      getServerSession.mockResolvedValue({
         user: { id: '123' },
         accessToken: 'mock_access_token',
       });
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         json: async () => ({ schedules: [] }),
       });
 
-      const request = new NextRequest('http://localhost:3000/api/schedules?query=engineering');
+      const request = createMockRequest('http://localhost:3000/api/schedules?query=engineering');
       const response = await GET(request);
 
       expect(response.status).toBe(200);
@@ -153,14 +194,15 @@ describe('/api/schedules', () => {
     });
 
     it('should handle network errors', async () => {
-      (getServerSession as jest.Mock).mockResolvedValue({
+      getServerSession.mockResolvedValue({
         user: { id: '123' },
         accessToken: 'mock_access_token',
       });
 
-      (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global.fetch as any).mockRejectedValue(new Error('Network error'));
 
-      const request = new NextRequest('http://localhost:3000/api/schedules');
+      const request = createMockRequest('http://localhost:3000/api/schedules');
       const response = await GET(request);
       const data = await response.json();
 
@@ -170,17 +212,18 @@ describe('/api/schedules', () => {
     });
 
     it('should return empty array when no schedules exist', async () => {
-      (getServerSession as jest.Mock).mockResolvedValue({
+      getServerSession.mockResolvedValue({
         user: { id: '123' },
         accessToken: 'mock_access_token',
       });
 
-      (global.fetch as jest.Mock).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (global.fetch as any).mockResolvedValue({
         ok: true,
         json: async () => ({ schedules: [] }),
       });
 
-      const request = new NextRequest('http://localhost:3000/api/schedules');
+      const request = createMockRequest('http://localhost:3000/api/schedules');
       const response = await GET(request);
       const data = await response.json();
 
