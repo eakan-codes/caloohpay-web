@@ -2,21 +2,19 @@
  * Utilities for processing PagerDuty schedule data
  */
 
-import { OnCallPeriod } from '../calculations/OnCallPeriod';
-import { OnCallUser } from '../calculations/OnCallUser';
+import { OnCallPeriod, OnCallUser } from 'caloohpay';
 import type { PagerDutySchedule, ScheduleEntry } from '@/lib/types';
 
 /**
  * Extracts OnCallUser objects from a PagerDuty schedule
  */
 export function extractOnCallUsers(schedule: PagerDutySchedule): OnCallUser[] {
-  const userMap = new Map<string, { name: string; email?: string; periods: OnCallPeriod[] }>();
+  const userMap = new Map<string, { name: string; periods: OnCallPeriod[] }>();
 
   // Process each schedule entry
   for (const entry of schedule.final_schedule.rendered_schedule_entries) {
     const userId = entry.user.id;
     const userName = entry.user.summary || entry.user.name || 'Unknown User';
-    const userEmail = entry.user.email;
 
     // Create OnCallPeriod
     const start = typeof entry.start === 'string' ? new Date(entry.start) : entry.start;
@@ -27,7 +25,6 @@ export function extractOnCallUsers(schedule: PagerDutySchedule): OnCallUser[] {
     if (!userMap.has(userId)) {
       userMap.set(userId, {
         name: userName,
-        email: userEmail,
         periods: [],
       });
     }
@@ -38,7 +35,7 @@ export function extractOnCallUsers(schedule: PagerDutySchedule): OnCallUser[] {
   // Convert map to array of OnCallUser objects
   const users: OnCallUser[] = [];
   for (const [userId, userData] of userMap.entries()) {
-    users.push(new OnCallUser(userId, userData.name, userData.periods, userData.email));
+    users.push(new OnCallUser(userId, userData.name, userData.periods));
   }
 
   return users;
@@ -73,30 +70,25 @@ export function consolidateUserPeriods(
  * Merges on-call users from multiple schedules
  */
 export function mergeOnCallUsers(users: OnCallUser[]): OnCallUser[] {
-  const userMap = new Map<string, { name: string; email?: string; periods: OnCallPeriod[] }>();
+  const userMap = new Map<string, { name: string; periods: OnCallPeriod[] }>();
 
   for (const user of users) {
     if (!userMap.has(user.id)) {
       userMap.set(user.id, {
         name: user.name,
-        email: user.email,
-        periods: [...user.periods],
+        periods: [...user.onCallPeriods],
       });
     } else {
       // Merge periods
       const existing = userMap.get(user.id)!;
-      existing.periods.push(...user.periods);
-      // Update email if not set
-      if (!existing.email && user.email) {
-        existing.email = user.email;
-      }
+      existing.periods.push(...user.onCallPeriods);
     }
   }
 
   // Convert back to OnCallUser objects
   const merged: OnCallUser[] = [];
   for (const [userId, userData] of userMap.entries()) {
-    merged.push(new OnCallUser(userId, userData.name, userData.periods, userData.email));
+    merged.push(new OnCallUser(userId, userData.name, userData.periods));
   }
 
   return merged;

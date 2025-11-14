@@ -7,16 +7,14 @@
 
 A modern web application that automates the calculation of out-of-hours (OOH) on-call compensation for engineering teams using PagerDuty schedules. Built with Next.js, TypeScript, and Material UI.
 
-## 🚀 Features
+## Features
 
-- **🔐 Secure Authentication**: Work email login with PagerDuty OAuth integration
-- **📅 Schedule Management**: Search and view PagerDuty schedules in a monthly calendar view
-- **💰 Automated Calculations**: Calculate OOH compensation based on weekday/weekend rates
-- **📊 Data Export**: Export payment data to CSV for payroll processing
-- **🌓 Dark Mode**: Full dark mode support for comfortable viewing
-- **📱 Responsive Design**: Works seamlessly across desktop, tablet, and mobile devices
-- **♿ Accessible**: WCAG 2.1 Level AA compliant
-- **⚡ Performance**: Optimized for fast loading and smooth interactions
+- 🔐 **Secure Authentication** - PagerDuty OAuth integration with NextAuth.js
+- 📅 **Schedule Visualization** - Interactive monthly calendar view of on-call schedules
+- 💰 **Payment Calculation** - Uses the official [caloohpay](https://www.npmjs.com/package/caloohpay) package for accurate out-of-hours compensation
+- 📊 **Export Capabilities** - Generate CSV reports for payroll processing
+- 🎨 **Modern UI** - Built with Material-UI and Tailwind CSS
+- 🔒 **Type Safety** - Full TypeScript implementation
 
 ## 📋 Prerequisites
 

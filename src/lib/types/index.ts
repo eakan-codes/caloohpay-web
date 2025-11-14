@@ -3,6 +3,10 @@
  * Based on the original CalOohPay CLI tool
  */
 
+// Re-export types from the official caloohpay package
+export type { OnCallPeriod, OnCallUser } from 'caloohpay';
+import type { OnCallCompensation as CaloohpayCompensation } from 'caloohpay';
+
 /**
  * PagerDuty User information
  */
@@ -44,42 +48,11 @@ export interface PagerDutySchedule {
 }
 
 /**
- * On-call period for a user
- */
-export interface OnCallPeriod {
-  start: Date;
-  end: Date;
-  timezone: string;
-}
-
-/**
- * User with on-call periods
- */
-export interface OnCallUser {
-  id: string;
-  name: string;
-  email?: string;
-  periods: OnCallPeriod[];
-  totalOohWeekdays: number;
-  totalOohWeekends: number;
-}
-
-/**
- * Compensation calculation result
- */
-export interface OnCallCompensation {
-  user: OnCallUser;
-  totalCompensation: number;
-  weekdayDays: number;
-  weekendDays: number;
-}
-
-/**
  * Payment calculation summary for a schedule
  */
 export interface SchedulePaymentSummary {
   schedule: PagerDutySchedule;
-  compensations: OnCallCompensation[];
+  compensations: CaloohpayCompensation[];
   totalAmount: number;
   calculatedAt: Date;
 }

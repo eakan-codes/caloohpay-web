@@ -2,7 +2,8 @@
  * CSV export utilities for payment data
  */
 
-import type { OnCallCompensation, CSVExportData } from '@/lib/types';
+import type { OnCallCompensation } from 'caloohpay';
+import type { CSVExportData } from '@/lib/types';
 import { PAYMENT_RATES } from '@/lib/constants';
 
 /**
@@ -59,10 +60,10 @@ export function compensationToCSVData(
     scheduleUrl,
     timezone,
     rows: compensations.map((comp) => ({
-      userName: comp.user.name,
+      userName: comp.OnCallUser.name,
       totalCompensation: comp.totalCompensation,
-      weekdayDays: comp.weekdayDays,
-      weekendDays: comp.weekendDays,
+      weekdayDays: comp.OnCallUser.getTotalOohWeekDays(),
+      weekendDays: comp.OnCallUser.getTotalOohWeekendDays(),
     })),
   };
 }
