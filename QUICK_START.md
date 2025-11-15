@@ -20,38 +20,62 @@ cd caloohpay-web
 npm install
 ```
 
-## Step 2: Environment Setup
+## Step 2: Register PagerDuty OAuth Application
+
+⚠️ **Required**: You must create a PagerDuty OAuth application first.
+
+### Quick Steps
+
+1. **Access PagerDuty Developer Portal**
+   - Log in to PagerDuty
+   - Navigate to: **User Icon** → **My Profile** → **User Settings** → **Developer Apps**
+   - Or go to: `https://[your-subdomain].pagerduty.com/developer/applications`
+
+2. **Create New App**
+   - Click **Create New App**
+   - **App Name**: `CalOohPay`
+   - **Redirect URL**: `http://localhost:3000/api/auth/callback/pagerduty`
+   - **Scopes**: Select `read`, `schedules.read`, `users.read`
+
+3. **Save Credentials**
+   - Copy the **Client ID**
+   - Copy the **Client Secret** (shown only once!)
+
+📖 **Need detailed instructions?** See [docs/setup/pagerduty-oauth-setup.md](./docs/setup/pagerduty-oauth-setup.md)
+
+## Step 3: Environment Setup
 
 ```bash
 # Create your local environment file
 cp .env.example .env.local
 ```
 
-Edit `.env.local` with your actual values:
+Edit `.env.local` with the credentials from Step 2:
 
 ```bash
-# PagerDuty OAuth Application
-# Create one at: https://[your-pagerduty-domain].pagerduty.com/developer/applications
+# PagerDuty OAuth Configuration (from Step 2)
 NEXT_PUBLIC_PAGERDUTY_CLIENT_ID=your_client_id_here
 PAGERDUTY_CLIENT_SECRET=your_client_secret_here
-PAGERDUTY_REDIRECT_URI=http://localhost:3000/api/auth/callback
 
-# NextAuth Secret
-# Generate with: openssl rand -base64 32
+# NextAuth Configuration
 NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your_generated_secret_here
+NEXTAUTH_SECRET=$(openssl rand -base64 32)  # Generate secret
 
 # Application URLs
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-## Step 3: Start Development Server
+💡 **Tip**: Generate `NEXTAUTH_SECRET` by running: `openssl rand -base64 32`
+
+## Step 4: Start Development Server
 
 ```bash
 npm run dev
 ```
 
-Your application will be running at **http://localhost:3000**
+Your application will be running at <http://localhost:3000>
+
+🎉 **Success!** You should see the CalOohPay login page. Click "Sign in with PagerDuty" to authenticate.
 
 ## Common Commands
 
@@ -77,7 +101,7 @@ npm run test:e2e:ui      # Run E2E tests with UI
 
 ## Project Structure at a Glance
 
-```
+```bash
 src/
 ├── app/              # Next.js pages and routes
 ├── components/       # React components
@@ -120,6 +144,7 @@ src/
    Note: Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/)
 
 4. **Push and create a PR**
+
    ```bash
    git push origin feature/my-feature
    ```

@@ -53,25 +53,39 @@ cd caloohpay-web
 npm install
 ```
 
-### 3. Environment Setup
+### 3. Register PagerDuty OAuth Application
+
+Before running the app, you need to create a PagerDuty OAuth application:
+
+1. Log in to your PagerDuty account
+2. Navigate to **User Icon** → **My Profile** → **User Settings** → **Developer Apps**
+3. Click **Create New App**
+4. Fill in the details:
+   - **App Name**: `CalOohPay` (or your preferred name)
+   - **Redirect URL**: `http://localhost:3000/api/auth/callback/pagerduty`
+   - **Scopes**: `read`, `schedules.read`, `users.read`
+5. Save and copy your **Client ID** and **Client Secret**
+
+📖 **Detailed Instructions**: See [docs/setup/pagerduty-oauth-setup.md](./docs/setup/pagerduty-oauth-setup.md) for a complete step-by-step guide.
+
+### 4. Environment Setup
 
 Create a `.env.local` file in the root directory:
 
 ```bash
-# PagerDuty Configuration
+# PagerDuty OAuth Configuration (from step 3)
 NEXT_PUBLIC_PAGERDUTY_CLIENT_ID=your_client_id
 PAGERDUTY_CLIENT_SECRET=your_client_secret
-PAGERDUTY_REDIRECT_URI=http://localhost:3000/api/auth/callback
 
 # NextAuth Configuration
 NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your_generated_secret
+NEXTAUTH_SECRET=your_generated_secret  # Generate with: openssl rand -base64 32
 
 # Application Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-### 4. Run Development Server
+### 5. Run Development Server
 
 ```bash
 npm run dev
@@ -79,7 +93,16 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+> 💡 **First time?** You'll be prompted to sign in with PagerDuty using the OAuth application you created in step 3.
+
 ## 📖 Documentation
+
+### Setup Guides
+
+- **[PagerDuty OAuth Setup](./docs/setup/pagerduty-oauth-setup.md)** - Complete guide to register a PagerDuty OAuth application
+- [Quick Start Guide](./QUICK_START.md) - Get started in minutes
+
+### Project Documentation
 
 - [Project Plan](./PROJECT_PLAN.md) - Detailed project roadmap and architecture
 - [Contributing Guide](./CONTRIBUTING.md) - How to contribute to this project
@@ -109,7 +132,7 @@ npm run test:coverage
 
 ## 🏗️ Project Structure
 
-```
+```bash
 caloohpay-web/
 ├── src/
 │   ├── app/              # Next.js App Router pages
