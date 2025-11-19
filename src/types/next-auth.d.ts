@@ -7,6 +7,7 @@ import 'next-auth/jwt';
 declare module 'next-auth' {
   interface Session {
     accessToken?: string;
+    authMethod?: 'oauth' | 'api-token';
     error?: string;
     user: {
       id: string;
@@ -29,6 +30,7 @@ declare module 'next-auth/jwt' {
     accessToken?: string;
     refreshToken?: string;
     accessTokenExpires?: number;
+    authMethod?: 'oauth' | 'api-token';
     error?: string;
     user?: {
       id: string;

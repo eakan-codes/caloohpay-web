@@ -53,9 +53,20 @@ cd caloohpay-web
 npm install
 ```
 
-### 3. Register PagerDuty OAuth Application
+### 3. Authentication Setup
 
-Before running the app, you need to create a PagerDuty OAuth application:
+CalOohPay supports **two authentication methods**:
+
+#### Option A: API Token (Simpler - Recommended for Getting Started)
+
+1. Log in to your PagerDuty account
+2. Navigate to **User Icon** → **My Profile** → **User Settings** → **API Access**
+3. Create or copy your **User API Token**
+4. Use this token to sign in on the login page (select the "API Token" tab)
+
+📖 **Detailed Guide**: [docs/setup/api-token-auth.md](./docs/setup/api-token-auth.md)
+
+#### Option B: OAuth 2.0 (Recommended for Production)
 
 1. Log in to your PagerDuty account
 2. Navigate to **User Icon** → **My Profile** → **User Settings** → **Developer Apps**
@@ -65,25 +76,30 @@ Before running the app, you need to create a PagerDuty OAuth application:
    - **Redirect URL**: `http://localhost:3000/api/auth/callback/pagerduty`
    - **Scopes**: `read`, `schedules.read`, `users.read`
 5. Save and copy your **Client ID** and **Client Secret**
+6. Add these to your `.env.local` file (see step 4 below)
 
-📖 **Detailed Instructions**: See [docs/setup/pagerduty-oauth-setup.md](./docs/setup/pagerduty-oauth-setup.md) for a complete step-by-step guide.
+📖 **Detailed Instructions**: [docs/setup/pagerduty-oauth-setup.md](./docs/setup/pagerduty-oauth-setup.md)
 
 ### 4. Environment Setup
 
 Create a `.env.local` file in the root directory:
 
 ```bash
-# PagerDuty OAuth Configuration (from step 3)
-NEXT_PUBLIC_PAGERDUTY_CLIENT_ID=your_client_id
-PAGERDUTY_CLIENT_SECRET=your_client_secret
+# PagerDuty Configuration
+# For API Token auth: No configuration needed (use token at login)
+# For OAuth auth: Add your OAuth credentials below
+NEXT_PUBLIC_PAGERDUTY_CLIENT_ID=your_client_id  # Optional (for OAuth only)
+PAGERDUTY_CLIENT_SECRET=your_client_secret      # Optional (for OAuth only)
 
-# NextAuth Configuration
+# NextAuth Configuration (Required)
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your_generated_secret  # Generate with: openssl rand -base64 32
 
 # Application Configuration
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
+
+> 💡 **Using API Token?** You don't need OAuth environment variables. Just generate a NEXTAUTH_SECRET and you're ready to go!
 
 ### 5. Run Development Server
 
@@ -93,13 +109,17 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-> 💡 **First time?** You'll be prompted to sign in with PagerDuty using the OAuth application you created in step 3.
+> 💡 **First time?** Choose your authentication method on the login page:
+>
+> - **API Token**: Paste your PagerDuty User API Token
+> - **OAuth**: Sign in with the OAuth application you created in step 3
 
 ## 📖 Documentation
 
 ### Setup Guides
 
-- **[PagerDuty OAuth Setup](./docs/setup/pagerduty-oauth-setup.md)** - Complete guide to register a PagerDuty OAuth application
+- **[API Token Authentication](./docs/setup/api-token-auth.md)** - Simple authentication with PagerDuty User API Token (recommended for getting started)
+- **[PagerDuty OAuth Setup](./docs/setup/pagerduty-oauth-setup.md)** - Complete guide to register a PagerDuty OAuth application (recommended for production)
 - [Quick Start Guide](./QUICK_START.md) - Get started in minutes
 
 ### Project Documentation

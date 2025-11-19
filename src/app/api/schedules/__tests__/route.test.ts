@@ -1,3 +1,5 @@
+import { jest, describe, beforeAll, beforeEach, it, expect } from '@jest/globals';
+
 // Mock next-auth before any imports that use it
 jest.mock('next-auth', () => ({
   getServerSession: jest.fn(),
@@ -22,11 +24,17 @@ jest.mock('next/server', () => ({
 }));
 
 // Mock fetch
-global.fetch = jest.fn();
+global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 
 // Helper to create a mock NextRequest
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function createMockRequest(url: string): any {
+interface MockNextRequest {
+  url: string;
+  nextUrl: URL;
+  method: string;
+  headers: Map<string, string>;
+}
+
+function createMockRequest(url: string): MockNextRequest {
   return {
     url,
     nextUrl: new URL(url),
@@ -39,16 +47,15 @@ describe('/api/schedules', () => {
   // Dynamically import after mocks are set up
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let GET: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let getServerSession: any;
+  let getServerSession: jest.MockedFunction<typeof import('next-auth').getServerSession>;
 
   beforeAll(async () => {
     const routeModule = await import('../route');
     GET = routeModule.GET;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession = (await import('next-auth')).getServerSession as any;
+    getServerSession = (await import('next-auth')).getServerSession as jest.MockedFunction<
+      typeof import('next-auth').getServerSession
+    >;
   });
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -78,7 +85,7 @@ describe('/api/schedules', () => {
       expect(data.error).toBe('Unauthorized');
     });
 
-    it('should fetch schedules from PagerDuty successfully', async () => {
+    it('should fetch schedules from PagerDuty successfully with OAuth', async () => {
       const mockSchedules = [
         {
           id: 'SCHEDULE1',
@@ -96,14 +103,14 @@ describe('/api/schedules', () => {
 
       getServerSession.mockResolvedValue({
         user: { id: '123' },
-        accessToken: 'mock_access_token',
+        accessToken: 'mock_oauth_token',
+        authMethod: 'oauth',
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
         ok: true,
         json: async () => ({ schedules: mockSchedules }),
-      });
+      } as Response);
 
       const request = createMockRequest('http://localhost:3000/api/schedules');
       const response = await GET(request);
@@ -113,32 +120,97 @@ describe('/api/schedules', () => {
       expect(data.schedules).toEqual(mockSchedules);
       expect(data.total).toBe(2);
 
-      // Verify PagerDuty API was called correctly
+      // Verify PagerDuty API was called with Bearer token for OAuth
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('https://api.pagerduty.com/schedules'),
         expect.objectContaining({
           headers: expect.objectContaining({
-            Authorization: 'Bearer mock_access_token',
+            Authorization: 'Bearer mock_oauth_token',
             Accept: 'application/vnd.pagerduty+json;version=2',
           }),
         })
       );
     });
 
-    it('should handle PagerDuty API errors', async () => {
+    it('should fetch schedules from PagerDuty successfully with API Token', async () => {
+      const mockSchedules = [
+        {
+          id: 'SCHEDULE1',
+          name: 'Engineering On-Call',
+          description: 'Main engineering rotation',
+          time_zone: 'America/New_York',
+        },
+      ];
+
       getServerSession.mockResolvedValue({
-        user: { id: '123' },
-        accessToken: 'mock_access_token',
+        user: { id: '456' },
+        accessToken: 'mock_api_token',
+        authMethod: 'api-token',
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
+        ok: true,
+        json: async () => ({ schedules: mockSchedules }),
+      } as Response);
+
+      const request = createMockRequest('http://localhost:3000/api/schedules');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.schedules).toEqual(mockSchedules);
+      expect(data.total).toBe(1);
+
+      // Verify PagerDuty API was called with Token format for API Token
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('https://api.pagerduty.com/schedules'),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Token token=mock_api_token',
+            Accept: 'application/vnd.pagerduty+json;version=2',
+          }),
+        })
+      );
+    });
+
+    it('should handle PagerDuty API errors with OAuth', async () => {
+      getServerSession.mockResolvedValue({
+        user: { id: '123' },
+        accessToken: 'mock_oauth_token',
+        authMethod: 'oauth',
+      });
+
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
         ok: false,
         status: 500,
         json: async () => ({
           error: { message: 'PagerDuty service unavailable' },
         }),
+      } as Response);
+
+      const request = createMockRequest('http://localhost:3000/api/schedules');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.error).toBe('Failed to fetch schedules');
+      expect(data.message).toBe('PagerDuty service unavailable');
+    });
+
+    it('should handle PagerDuty API errors with API Token', async () => {
+      getServerSession.mockResolvedValue({
+        user: { id: '123' },
+        accessToken: 'mock_api_token',
+        authMethod: 'api-token',
       });
+
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({
+          error: { message: 'PagerDuty service unavailable' },
+        }),
+      } as Response);
 
       const request = createMockRequest('http://localhost:3000/api/schedules');
       const response = await GET(request);
@@ -155,12 +227,11 @@ describe('/api/schedules', () => {
         accessToken: 'expired_token',
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
         ok: false,
         status: 401,
         json: async () => ({ error: { message: 'Unauthorized' } }),
-      });
+      } as Response);
 
       const request = createMockRequest('http://localhost:3000/api/schedules');
       const response = await GET(request);
@@ -177,11 +248,10 @@ describe('/api/schedules', () => {
         accessToken: 'mock_access_token',
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
         ok: true,
         json: async () => ({ schedules: [] }),
-      });
+      } as Response);
 
       const request = createMockRequest('http://localhost:3000/api/schedules?query=engineering');
       const response = await GET(request);
@@ -199,8 +269,9 @@ describe('/api/schedules', () => {
         accessToken: 'mock_access_token',
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (global.fetch as any).mockRejectedValue(new Error('Network error'));
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockRejectedValue(
+        new Error('Network error')
+      );
 
       const request = createMockRequest('http://localhost:3000/api/schedules');
       const response = await GET(request);
@@ -217,11 +288,10 @@ describe('/api/schedules', () => {
         accessToken: 'mock_access_token',
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (global.fetch as any).mockResolvedValue({
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
         ok: true,
         json: async () => ({ schedules: [] }),
-      });
+      } as Response);
 
       const request = createMockRequest('http://localhost:3000/api/schedules');
       const response = await GET(request);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
+import { getPagerDutyHeaders } from '@/lib/utils/pagerdutyAuth';
 
 /**
  * GET /api/schedules
@@ -25,11 +26,7 @@ export async function GET(request: NextRequest) {
     });
 
     const response = await fetch(`${baseUrl}?${params}`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        Accept: 'application/vnd.pagerduty+json;version=2',
-        'Content-Type': 'application/json',
-      },
+      headers: getPagerDutyHeaders(session.accessToken, session.authMethod),
     });
 
     if (!response.ok) {

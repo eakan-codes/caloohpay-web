@@ -20,18 +20,37 @@ cd caloohpay-web
 npm install
 ```
 
-## Step 2: Register PagerDuty OAuth Application
+## Step 2: Authentication Setup
 
-⚠️ **Required**: You must create a PagerDuty OAuth application first.
+CalOohPay supports **two authentication methods**. Choose the one that works best for you:
 
-### Quick Steps
+### Option A: API Token (Recommended for Getting Started)
 
-1. **Access PagerDuty Developer Portal**
+This is the **simplest way** to get started - no OAuth app setup required!
+
+1. **Get Your API Token**
+   - Log in to PagerDuty
+   - Navigate to: **User Icon** → **My Profile** → **User Settings** → **API Access**
+   - Create or copy your **User API Token**
+
+2. **Start the app** (see Step 3 below)
+
+3. **Sign in**
+   - On the login page, click the **API Token** tab
+   - Paste your token and click **Sign in with API Token**
+
+📖 **Detailed Guide**: [docs/setup/api-token-auth.md](./docs/setup/api-token-auth.md)
+
+### Option B: OAuth 2.0 (Recommended for Production)
+
+Use this for multi-user deployments or if you prefer OAuth authentication.
+
+1. **Create PagerDuty OAuth App**
    - Log in to PagerDuty
    - Navigate to: **User Icon** → **My Profile** → **User Settings** → **Developer Apps**
    - Or go to: `https://[your-subdomain].pagerduty.com/developer/applications`
 
-2. **Create New App**
+2. **Configure New App**
    - Click **Create New App**
    - **App Name**: `CalOohPay`
    - **Redirect URL**: `http://localhost:3000/api/auth/callback/pagerduty`
@@ -40,8 +59,9 @@ npm install
 3. **Save Credentials**
    - Copy the **Client ID**
    - Copy the **Client Secret** (shown only once!)
+   - Add these to your `.env.local` file (see Step 3 below)
 
-📖 **Need detailed instructions?** See [docs/setup/pagerduty-oauth-setup.md](./docs/setup/pagerduty-oauth-setup.md)
+📖 **Detailed Guide**: [docs/setup/pagerduty-oauth-setup.md](./docs/setup/pagerduty-oauth-setup.md)
 
 ## Step 3: Environment Setup
 
@@ -50,22 +70,24 @@ npm install
 cp .env.example .env.local
 ```
 
-Edit `.env.local` with the credentials from Step 2:
+Edit `.env.local` with your configuration:
 
 ```bash
-# PagerDuty OAuth Configuration (from Step 2)
-NEXT_PUBLIC_PAGERDUTY_CLIENT_ID=your_client_id_here
-PAGERDUTY_CLIENT_SECRET=your_client_secret_here
-
-# NextAuth Configuration
+# NextAuth Configuration (Required for both methods)
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=$(openssl rand -base64 32)  # Generate secret
+
+# PagerDuty OAuth Configuration (Optional - only if using OAuth)
+NEXT_PUBLIC_PAGERDUTY_CLIENT_ID=your_client_id_here  # From Step 2, Option B
+PAGERDUTY_CLIENT_SECRET=your_client_secret_here      # From Step 2, Option B
 
 # Application URLs
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 💡 **Tip**: Generate `NEXTAUTH_SECRET` by running: `openssl rand -base64 32`
+
+💡 **Using API Token?** You only need `NEXTAUTH_URL` and `NEXTAUTH_SECRET`. Skip the OAuth credentials!
 
 ## Step 4: Start Development Server
 
@@ -75,7 +97,10 @@ npm run dev
 
 Your application will be running at <http://localhost:3000>
 
-🎉 **Success!** You should see the CalOohPay login page. Click "Sign in with PagerDuty" to authenticate.
+🎉 **Success!** You should see the CalOohPay login page with two authentication options:
+
+- **API Token tab**: Paste your PagerDuty User API Token
+- **OAuth Login tab**: Click "Sign in with PagerDuty" (requires OAuth setup from Step 2, Option B)
 
 ## Common Commands
 

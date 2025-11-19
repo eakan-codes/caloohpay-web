@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth/options';
+import { getPagerDutyHeaders } from '@/lib/utils/pagerdutyAuth';
 
 /**
  * GET /api/schedules/[id]
@@ -12,7 +13,7 @@ import { authOptions } from '@/lib/auth/options';
  *
  * Returns: PagerDuty schedule with rendered_schedule_entries
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -35,8 +36,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const since = searchParams.get('since');
     const until = searchParams.get('until');
 
+    // Await params in Next.js 15+
+    const { id } = await params;
+
     // Build PagerDuty API URL with time range if provided
-    let apiUrl = `https://api.pagerduty.com/schedules/${params.id}`;
+    let apiUrl = `https://api.pagerduty.com/schedules/${id}`;
     const queryParams = new URLSearchParams();
 
     if (since) {
@@ -52,11 +56,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     // Fetch from PagerDuty API
     const response = await fetch(apiUrl, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        Accept: 'application/vnd.pagerduty+json;version=2',
-        'Content-Type': 'application/json',
-      },
+      headers: getPagerDutyHeaders(session.accessToken, session.authMethod),
     });
 
     if (!response.ok) {

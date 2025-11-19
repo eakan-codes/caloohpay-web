@@ -14,6 +14,7 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  silent: true,
   transformIgnorePatterns: ['node_modules/(?!(jose|openid-client|next-auth)/)'],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',

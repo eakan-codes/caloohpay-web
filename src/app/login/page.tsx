@@ -1,17 +1,32 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Box, Button, Card, CardContent, Container, Stack, Typography, Alert } from '@mui/material';
-import { Login as LoginIcon } from '@mui/icons-material';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Stack,
+  Typography,
+  Alert,
+  TextField,
+  Tab,
+  Tabs,
+} from '@mui/material';
+import { Login as LoginIcon, VpnKey as ApiKeyIcon } from '@mui/icons-material';
 import { Loading } from '@/components/common';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
+  const [authMethod, setAuthMethod] = useState<'oauth' | 'token'>('oauth');
+  const [apiToken, setApiToken] = useState('');
+  const [tokenError, setTokenError] = useState('');
 
   const errorParam = searchParams.get('error');
 
@@ -51,6 +66,35 @@ export default function LoginPage() {
     } catch (err) {
       console.error('Sign in error:', err);
       // Error will be shown via URL params after redirect
+      setIsLoading(false);
+    }
+  };
+
+  const handleTokenSignIn = async () => {
+    if (!apiToken.trim()) {
+      setTokenError('Please enter your API token');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setTokenError('');
+
+      const result = await signIn('pagerduty-token', {
+        apiToken: apiToken.trim(),
+        callbackUrl: '/schedules',
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setTokenError('Invalid API token. Please check and try again.');
+        setIsLoading(false);
+      } else if (result?.ok) {
+        router.push('/schedules');
+      }
+    } catch (err) {
+      console.error('Token sign in error:', err);
+      setTokenError('An error occurred. Please try again.');
       setIsLoading(false);
     }
   };
@@ -104,39 +148,116 @@ export default function LoginPage() {
                 </Alert>
               )}
 
-              {/* Sign In Button */}
-              <Button
-                variant="contained"
-                size="large"
-                fullWidth
-                startIcon={<LoginIcon />}
-                onClick={handleSignIn}
-                disabled={isLoading}
-                sx={{ py: 1.5 }}
+              {tokenError && (
+                <Alert severity="error" sx={{ width: '100%' }}>
+                  {tokenError}
+                </Alert>
+              )}
+
+              {/* Auth Method Tabs */}
+              <Tabs
+                value={authMethod}
+                onChange={(_, newValue) => {
+                  setAuthMethod(newValue);
+                  setTokenError('');
+                }}
+                sx={{ width: '100%', borderBottom: 1, borderColor: 'divider' }}
               >
-                {isLoading ? 'Connecting to PagerDuty...' : 'Sign in with PagerDuty'}
-              </Button>
+                <Tab label="OAuth Login" value="oauth" sx={{ flex: 1 }} />
+                <Tab label="API Token" value="token" sx={{ flex: 1 }} />
+              </Tabs>
 
-              {/* Info Text */}
-              <Box sx={{ pt: 2 }}>
-                <Typography variant="caption" color="text.secondary" textAlign="center">
-                  By signing in, you authorize CalOohPay to access your PagerDuty schedules for
-                  payment calculation purposes.
-                </Typography>
-              </Box>
+              {/* OAuth Sign In */}
+              {authMethod === 'oauth' && (
+                <Stack spacing={2} sx={{ width: '100%' }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    startIcon={<LoginIcon />}
+                    onClick={handleSignIn}
+                    disabled={isLoading}
+                    sx={{ py: 1.5 }}
+                  >
+                    {isLoading ? 'Connecting to PagerDuty...' : 'Sign in with PagerDuty'}
+                  </Button>
 
-              {/* Help Text */}
-              <Stack spacing={1} sx={{ pt: 2, width: '100%' }}>
-                <Typography variant="body2" fontWeight={600}>
-                  Required Permissions:
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  • Read access to schedules
-                  <br />
-                  • Read access to user information
-                  <br />• Read access to on-call schedules
-                </Typography>
-              </Stack>
+                  <Typography variant="caption" color="text.secondary" textAlign="center">
+                    By signing in, you authorize CalOohPay to access your PagerDuty schedules for
+                    payment calculation purposes.
+                  </Typography>
+
+                  <Stack spacing={1} sx={{ pt: 1 }}>
+                    <Typography variant="body2" fontWeight={600}>
+                      Required Permissions:
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      • Read access to schedules
+                      <br />
+                      • Read access to user information
+                      <br />• Read access to on-call schedules
+                    </Typography>
+                  </Stack>
+                </Stack>
+              )}
+
+              {/* API Token Sign In */}
+              {authMethod === 'token' && (
+                <Stack spacing={2} sx={{ width: '100%' }}>
+                  <TextField
+                    fullWidth
+                    type="password"
+                    label="PagerDuty User API Token"
+                    placeholder="Enter your API token"
+                    value={apiToken}
+                    onChange={(e) => setApiToken(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleTokenSignIn();
+                      }
+                    }}
+                    disabled={isLoading}
+                    error={!!tokenError}
+                    helperText="Find your API token in PagerDuty > User Icon > My Profile > User Settings > API Access"
+                  />
+
+                  <Button
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    startIcon={<ApiKeyIcon />}
+                    onClick={handleTokenSignIn}
+                    disabled={isLoading || !apiToken.trim()}
+                    sx={{ py: 1.5 }}
+                  >
+                    {isLoading ? 'Verifying Token...' : 'Sign in with API Token'}
+                  </Button>
+
+                  <Alert severity="info" sx={{ width: '100%' }}>
+                    <Typography variant="caption">
+                      Using an API token is simpler than OAuth but requires manual token management.
+                      Your token is stored securely and only used to access your PagerDuty data.
+                    </Typography>
+                  </Alert>
+
+                  <Stack spacing={1} sx={{ pt: 1 }}>
+                    <Typography variant="body2" fontWeight={600}>
+                      How to get your API Token:
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      1. Log into PagerDuty
+                      <br />
+                      2. Click your user icon → My Profile
+                      <br />
+                      3. Go to User Settings tab
+                      <br />
+                      4. Scroll to API Access section
+                      <br />
+                      5. Create or copy your User API Token
+                    </Typography>
+                  </Stack>
+                </Stack>
+              )}
             </Stack>
           </CardContent>
         </Card>
@@ -159,5 +280,13 @@ export default function LoginPage() {
         </Typography>
       </Container>
     </Box>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<Loading message="Loading..." fullScreen />}>
+      <LoginForm />
+    </Suspense>
   );
 }

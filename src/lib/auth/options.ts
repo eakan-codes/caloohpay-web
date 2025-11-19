@@ -1,6 +1,13 @@
-import { AuthOptions } from 'next-auth';
+import { AuthOptions, DefaultUser } from 'next-auth';
 import { JWT } from 'next-auth/jwt';
 import { OAuthConfig } from 'next-auth/providers/oauth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+
+declare module 'next-auth' {
+  interface User extends DefaultUser {
+    apiToken?: string;
+  }
+}
 
 /**
  * PagerDuty OAuth Provider Configuration
@@ -35,11 +42,62 @@ const PagerDutyProvider: OAuthConfig<{
 };
 
 /**
+ * PagerDuty API Token Provider Configuration
+ * Allows users to authenticate with their PagerDuty User API Token
+ */
+const PagerDutyAPITokenProvider = CredentialsProvider({
+  id: 'pagerduty-token',
+  name: 'PagerDuty API Token',
+  credentials: {
+    apiToken: {
+      label: 'API Token',
+      type: 'password',
+      placeholder: 'Enter your PagerDuty API Token',
+    },
+  },
+  async authorize(credentials) {
+    if (!credentials?.apiToken) {
+      return null;
+    }
+
+    try {
+      // Verify the API token by fetching the user's profile
+      const response = await fetch('https://api.pagerduty.com/users/me', {
+        headers: {
+          Authorization: `Token token=${credentials.apiToken}`,
+          Accept: 'application/vnd.pagerduty+json;version=2',
+        },
+      });
+
+      if (!response.ok) {
+        console.error('PagerDuty API Token validation failed:', response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      const user = data.user;
+
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        image: user.avatar_url,
+        // Store the API token for use in API calls
+        apiToken: credentials.apiToken,
+      };
+    } catch (error) {
+      console.error('Error validating PagerDuty API token:', error);
+      return null;
+    }
+  },
+});
+
+/**
  * NextAuth.js Configuration
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: AuthOptions = {
-  providers: [PagerDutyProvider],
+  providers: [PagerDutyProvider, PagerDutyAPITokenProvider],
 
   pages: {
     signIn: '/login',
@@ -53,16 +111,33 @@ export const authOptions: AuthOptions = {
 
   callbacks: {
     /**
-     * JWT Callback - Store PagerDuty access token in JWT
+     * JWT Callback - Store PagerDuty access token or API token in JWT
      */
     async jwt({ token, account, user }): Promise<JWT> {
       // Initial sign in
       if (account && user) {
+        // Check if this is API token login (credentials provider)
+        if (account.type === 'credentials') {
+          return {
+            ...token,
+            accessToken: user.apiToken,
+            authMethod: 'api-token',
+            user: {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              image: user.image,
+            },
+          };
+        }
+
+        // OAuth login
         return {
           ...token,
           accessToken: account.access_token,
           refreshToken: account.refresh_token,
           accessTokenExpires: account.expires_at ? account.expires_at * 1000 : 0,
+          authMethod: 'oauth',
           user: {
             id: user.id,
             name: user.name,
@@ -70,6 +145,11 @@ export const authOptions: AuthOptions = {
             image: user.image,
           },
         };
+      }
+
+      // API token authentication doesn't expire
+      if (token.authMethod === 'api-token') {
+        return token;
       }
 
       // Return previous token if the access token has not expired yet

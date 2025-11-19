@@ -3,7 +3,7 @@ import { authOptions } from '../options';
 describe('Authentication Options', () => {
   describe('Provider Configuration', () => {
     it('should have PagerDuty provider configured', () => {
-      expect(authOptions.providers).toHaveLength(1);
+      expect(authOptions.providers).toHaveLength(2);
       expect(authOptions.providers[0].id).toBe('pagerduty');
     });
 
