@@ -3,6 +3,9 @@
 # dependencies
 /node_modules
 /.pnp
+/playwright-report
+/test-results
+
 .pnp.*
 .yarn/*
 !.yarn/patches

@@ -1,4 +1,5 @@
 import { authOptions } from '../options';
+import type { AdapterUser, Session } from 'next-auth';
 
 describe('Authentication Options', () => {
   describe('Provider Configuration', () => {
@@ -52,13 +53,13 @@ describe('Authentication Options', () => {
   describe('Debug Mode', () => {
     it('should enable debug in development', () => {
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
+      (process.env as { NODE_ENV?: string }).NODE_ENV = 'development';
 
       // Note: authOptions is already imported with current NODE_ENV
       // In real scenario, we'd need to dynamically import
       expect(authOptions.debug).toBeDefined();
 
-      process.env.NODE_ENV = originalEnv;
+      (process.env as { NODE_ENV?: string }).NODE_ENV = originalEnv;
     });
   });
 });
@@ -115,8 +116,16 @@ describe('JWT Callback', () => {
       },
     };
 
+    const mockUser = {
+      id: 'user123',
+      name: 'Test User',
+      email: 'test@example.com',
+    };
+
     const result = await mockJWT({
       token: existingToken,
+      user: mockUser,
+      account: null,
       trigger: 'update',
     });
 
@@ -156,11 +165,13 @@ describe('Session Callback', () => {
     const result = await mockSession({
       session: mockSessionInput,
       token: mockToken,
-      trigger: 'getSession',
+      user: mockToken.user as AdapterUser,
+      newSession: mockSessionInput,
+      trigger: 'update',
     });
 
     expect(result.user).toEqual(mockToken.user);
-    expect(result.accessToken).toBe('mock_access_token');
+    expect((result as Session).accessToken).toBe('mock_access_token');
   });
 
   it('should include error in session if present', async () => {
@@ -190,9 +201,11 @@ describe('Session Callback', () => {
     const result = await mockSession({
       session: mockSessionInput,
       token: mockToken,
-      trigger: 'getSession',
+      user: mockToken.user as AdapterUser,
+      newSession: mockSessionInput,
+      trigger: 'update',
     });
 
-    expect(result.error).toBe('RefreshAccessTokenError');
+    expect((result as Session).error).toBe('RefreshAccessTokenError');
   });
 });
