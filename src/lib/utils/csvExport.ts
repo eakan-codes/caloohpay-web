@@ -2,7 +2,7 @@
  * CSV export utilities for payment data
  */
 
-import type { OnCallCompensation } from 'caloohpay';
+import type { OnCallCompensation } from 'caloohpay/core';
 import type { CSVExportData } from '@/lib/types';
 import { PAYMENT_RATES } from '@/lib/constants';
 

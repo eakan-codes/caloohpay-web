@@ -2,7 +2,7 @@
  * Utilities for processing PagerDuty schedule data
  */
 
-import { OnCallPeriod, OnCallUser } from 'caloohpay';
+import { OnCallPeriod, OnCallUser } from 'caloohpay/core';
 import type { PagerDutySchedule, ScheduleEntry } from '@/lib/types';
 
 /**

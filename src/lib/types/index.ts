@@ -4,8 +4,8 @@
  */
 
 // Re-export types from the official caloohpay package
-export type { OnCallPeriod, OnCallUser } from 'caloohpay';
-import type { OnCallCompensation as CaloohpayCompensation } from 'caloohpay';
+export type { OnCallPeriod, OnCallUser } from 'caloohpay/core';
+import type { OnCallCompensation as CaloohpayCompensation } from 'caloohpay/core';
 
 /**
  * PagerDuty User information

@@ -17,45 +17,30 @@ import {
   Divider,
   Stack,
 } from '@mui/material';
-import { ArrowBack, CalendarMonth, Schedule, AccessTime, Person } from '@mui/icons-material';
+import {
+  ArrowBack,
+  CalendarMonth,
+  Schedule,
+  AccessTime,
+  Person,
+  EventBusy,
+  EventAvailable,
+  AttachMoney,
+} from '@mui/icons-material';
 import { useState, useMemo } from 'react';
 import { DateTime } from 'luxon';
-
-interface User {
-  id: string;
-  summary: string;
-  email?: string;
-  name?: string;
-}
-
-interface ScheduleEntry {
-  start: string;
-  end: string;
-  user: User;
-}
-
-interface Schedule {
-  id: string;
-  name: string;
-  time_zone: string;
-  description?: string;
-  html_url: string;
-  schedule_layers?: unknown[];
-  final_schedule?: {
-    name: string;
-    rendered_schedule_entries: ScheduleEntry[];
-  };
-}
+import { OnCallPeriod } from 'caloohpay/core';
+import { PAYMENT_RATES } from '@/lib/constants';
+import { getPagerDutyHeaders } from '@/lib/utils/pagerdutyAuth';
+import type { PagerDutySchedule, ScheduleEntry, User } from '@/lib/types';
 
 interface ScheduleResponse {
-  schedule: Schedule;
+  schedule: PagerDutySchedule;
 }
 
-const fetcher = async ([url, token]: [string, string]) => {
+const fetcher = async ([url, token, authMethod]: [string, string, string | undefined]) => {
   const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: getPagerDutyHeaders(token, authMethod as 'oauth' | 'api-token'),
   });
 
   if (!response.ok) {
@@ -90,7 +75,7 @@ export default function ScheduleDetailPage() {
   }, [scheduleId, dateRange]);
 
   const { data, error, isLoading } = useSWR<ScheduleResponse>(
-    session?.accessToken ? [apiUrl, session.accessToken] : null,
+    session?.accessToken ? [apiUrl, session.accessToken, session.authMethod] : null,
     fetcher
   );
 
@@ -139,17 +124,58 @@ export default function ScheduleDetailPage() {
       userMap.get(userId)!.entries.push(entry);
     });
 
-    return Array.from(userMap.values()).map((item) => ({
-      user: item.user,
-      entries: item.entries.sort(
+    return Array.from(userMap.values()).map((item) => {
+      const sortedEntries = item.entries.sort(
         (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
-      ),
-      totalHours: item.entries.reduce((sum, entry) => {
-        const start = DateTime.fromISO(entry.start);
-        const end = DateTime.fromISO(entry.end);
-        return sum + end.diff(start, 'hours').hours;
-      }, 0),
-    }));
+      );
+
+      // Create OnCallPeriod instances for all entries
+      const onCallPeriods = sortedEntries.map(
+        (entry) =>
+          new OnCallPeriod(new Date(entry.start), new Date(entry.end), data.schedule.time_zone)
+      );
+
+      // Calculate details for each entry
+      const entriesWithCompensation = sortedEntries.map((entry, index) => {
+        const start = DateTime.fromISO(
+          typeof entry.start === 'string' ? entry.start : entry.start.toISOString()
+        );
+        const end = DateTime.fromISO(
+          typeof entry.end === 'string' ? entry.end : entry.end.toISOString()
+        );
+        const duration = end.diff(start, 'hours').hours;
+
+        const period = onCallPeriods[index];
+        const weekdayDays = period.numberOfOohWeekDays;
+        const weekendDays = period.numberOfOohWeekends;
+
+        // Calculate compensation for this single period
+        const compensation =
+          weekdayDays * PAYMENT_RATES.WEEKDAY + weekendDays * PAYMENT_RATES.WEEKEND;
+
+        return {
+          ...entry,
+          duration,
+          weekdayDays,
+          weekendDays,
+          compensation,
+        };
+      });
+
+      const totalHours = entriesWithCompensation.reduce((sum, e) => sum + e.duration, 0);
+      const totalWeekdays = entriesWithCompensation.reduce((sum, e) => sum + e.weekdayDays, 0);
+      const totalWeekends = entriesWithCompensation.reduce((sum, e) => sum + e.weekendDays, 0);
+      const totalCompensation = entriesWithCompensation.reduce((sum, e) => sum + e.compensation, 0);
+
+      return {
+        user: item.user,
+        entries: entriesWithCompensation,
+        totalHours,
+        totalWeekdays,
+        totalWeekends,
+        totalCompensation,
+      };
+    });
   }, [data]);
 
   // Loading state
@@ -283,78 +309,156 @@ export default function ScheduleDetailPage() {
           </Typography>
 
           <Stack spacing={3}>
-            {userSchedules.map(({ user, entries, totalHours }) => (
-              <Card key={user.id} variant="outlined">
-                <CardContent>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      mb: 2,
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Person />
-                      <Box>
-                        <Typography variant="h6">{user.name || user.summary}</Typography>
-                        {user.email && (
-                          <Typography variant="body2" color="text.secondary">
-                            {user.email}
-                          </Typography>
-                        )}
+            {userSchedules.map(
+              ({ user, entries, totalHours, totalWeekdays, totalWeekends, totalCompensation }) => (
+                <Card key={user.id} variant="outlined">
+                  <CardContent>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        mb: 2,
+                        flexWrap: 'wrap',
+                        gap: 2,
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Person />
+                        <Box>
+                          <Typography variant="h6">{user.name || user.summary}</Typography>
+                          {user.email && (
+                            <Typography variant="body2" color="text.secondary">
+                              {user.email}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <Chip
+                          label={`${totalHours.toFixed(1)} hours`}
+                          color="primary"
+                          variant="outlined"
+                        />
+                        <Chip
+                          icon={<EventBusy />}
+                          label={`${totalWeekdays} weekdays`}
+                          color="default"
+                          variant="outlined"
+                        />
+                        <Chip
+                          icon={<EventAvailable />}
+                          label={`${totalWeekends} weekends`}
+                          color="secondary"
+                          variant="outlined"
+                        />
+                        <Chip
+                          icon={<AttachMoney />}
+                          label={`${PAYMENT_RATES.CURRENCY_SYMBOL}${totalCompensation.toFixed(2)}`}
+                          color="success"
+                          variant="filled"
+                        />
                       </Box>
                     </Box>
-                    <Chip label={`${totalHours.toFixed(1)} hours`} color="primary" />
-                  </Box>
 
-                  <Divider sx={{ my: 2 }} />
+                    <Divider sx={{ my: 2 }} />
 
-                  <Box>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                      On-Call Periods ({entries.length})
-                    </Typography>
-                    <Stack spacing={1}>
-                      {entries.map((entry, index) => {
-                        const start = DateTime.fromISO(entry.start, {
-                          zone: schedule.time_zone,
-                        });
-                        const end = DateTime.fromISO(entry.end, {
-                          zone: schedule.time_zone,
-                        });
-                        const duration = end.diff(start, 'hours').hours;
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        On-Call Periods ({entries.length})
+                      </Typography>
+                      <Stack spacing={1}>
+                        {entries.map((entry, index) => {
+                          const start = DateTime.fromISO(
+                            typeof entry.start === 'string'
+                              ? entry.start
+                              : entry.start.toISOString(),
+                            {
+                              zone: schedule.time_zone,
+                            }
+                          );
+                          const end = DateTime.fromISO(
+                            typeof entry.end === 'string' ? entry.end : entry.end.toISOString(),
+                            {
+                              zone: schedule.time_zone,
+                            }
+                          );
 
-                        return (
-                          <Box
-                            key={index}
-                            sx={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              p: 1.5,
-                              bgcolor: 'action.hover',
-                              borderRadius: 1,
-                            }}
-                          >
-                            <Box>
-                              <Typography variant="body2" fontWeight="medium">
-                                {start.toFormat('EEE, MMM d, yyyy, HH:mm ZZZ ZZZZ')} -{' '}
-                                {end.toFormat('EEE, MMM d, yyyy, HH:mm ZZZ ZZZZ')}
-                              </Typography>
+                          return (
+                            <Box
+                              key={index}
+                              sx={{
+                                p: 1.5,
+                                bgcolor: 'action.hover',
+                                borderRadius: 1,
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'flex-start',
+                                  flexWrap: 'wrap',
+                                  gap: 1,
+                                }}
+                              >
+                                <Box sx={{ flex: 1, minWidth: '200px' }}>
+                                  <Typography variant="body2" fontWeight="medium">
+                                    {start.toFormat('EEE, MMM d, yyyy, HH:mm ZZZ')}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {end.toFormat('EEE, MMM d, yyyy, HH:mm ZZZ')}
+                                  </Typography>
+                                </Box>
+
+                                <Box
+                                  sx={{
+                                    display: 'flex',
+                                    gap: 0.5,
+                                    flexWrap: 'wrap',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <Chip
+                                    label={`${entry.duration.toFixed(1)}h`}
+                                    size="small"
+                                    variant="outlined"
+                                  />
+                                  {entry.weekdayDays > 0 && (
+                                    <Chip
+                                      label={`${entry.weekdayDays} WD`}
+                                      size="small"
+                                      color="default"
+                                      title={`${entry.weekdayDays} weekday${entry.weekdayDays > 1 ? 's' : ''} × ${PAYMENT_RATES.CURRENCY_SYMBOL}${PAYMENT_RATES.WEEKDAY}`}
+                                    />
+                                  )}
+                                  {entry.weekendDays > 0 && (
+                                    <Chip
+                                      label={`${entry.weekendDays} WE`}
+                                      size="small"
+                                      color="secondary"
+                                      title={`${entry.weekendDays} weekend${entry.weekendDays > 1 ? 's' : ''} × ${PAYMENT_RATES.CURRENCY_SYMBOL}${PAYMENT_RATES.WEEKEND}`}
+                                    />
+                                  )}
+                                  <Chip
+                                    icon={<AttachMoney sx={{ fontSize: '16px !important' }} />}
+                                    label={`${PAYMENT_RATES.CURRENCY_SYMBOL}${entry.compensation.toFixed(2)}`}
+                                    size="small"
+                                    color="success"
+                                    sx={{ fontWeight: 'medium' }}
+                                  />
+                                </Box>
+                              </Box>
                             </Box>
-                            <Chip
-                              label={`${duration.toFixed(1)}h`}
-                              size="small"
-                              variant="outlined"
-                            />
-                          </Box>
-                        );
-                      })}
-                    </Stack>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
+                          );
+                        })}
+                      </Stack>
+                    </Box>
+                  </CardContent>
+                </Card>
+              )
+            )}
           </Stack>
         </Box>
       )}

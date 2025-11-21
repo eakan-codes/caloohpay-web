@@ -38,7 +38,7 @@
     "@mui/material": "^7.3.5",
     "@pagerduty/pdjs": "^2.2.4",
     "axios": "^1.13.2",
-    "caloohpay": "^2.0.0",
+    "caloohpay": "^2.1.0",
     "date-fns": "^4.1.0",
     "luxon": "^3.7.2",
     "next": "16.0.1",
