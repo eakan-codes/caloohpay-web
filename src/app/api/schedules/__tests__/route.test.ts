@@ -85,7 +85,7 @@ describe('/api/schedules', () => {
       expect(data.error).toBe('Unauthorized');
     });
 
-    it('should fetch schedules from PagerDuty successfully with OAuth', async () => {
+    it('should fetch schedules from PagerDuty successfully with OAuth and pagination', async () => {
       const mockSchedules = [
         {
           id: 'SCHEDULE1',
@@ -109,7 +109,7 @@ describe('/api/schedules', () => {
 
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
         ok: true,
-        json: async () => ({ schedules: mockSchedules }),
+        json: async () => ({ schedules: mockSchedules, more: false }),
       } as Response);
 
       const request = createMockRequest('http://localhost:3000/api/schedules');
@@ -119,6 +119,9 @@ describe('/api/schedules', () => {
       expect(response.status).toBe(200);
       expect(data.schedules).toEqual(mockSchedules);
       expect(data.total).toBe(2);
+      expect(data.limit).toBe(16);
+      expect(data.offset).toBe(0);
+      expect(data.more).toBe(false);
 
       // Verify PagerDuty API was called with Bearer token for OAuth
       expect(global.fetch).toHaveBeenCalledWith(
@@ -150,7 +153,7 @@ describe('/api/schedules', () => {
 
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
         ok: true,
-        json: async () => ({ schedules: mockSchedules }),
+        json: async () => ({ schedules: mockSchedules, more: false }),
       } as Response);
 
       const request = createMockRequest('http://localhost:3000/api/schedules');
@@ -160,6 +163,8 @@ describe('/api/schedules', () => {
       expect(response.status).toBe(200);
       expect(data.schedules).toEqual(mockSchedules);
       expect(data.total).toBe(1);
+      expect(data.limit).toBe(16);
+      expect(data.offset).toBe(0);
 
       // Verify PagerDuty API was called with Token format for API Token
       expect(global.fetch).toHaveBeenCalledWith(
@@ -250,7 +255,7 @@ describe('/api/schedules', () => {
 
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
         ok: true,
-        json: async () => ({ schedules: [] }),
+        json: async () => ({ schedules: [], more: false }),
       } as Response);
 
       const request = createMockRequest('http://localhost:3000/api/schedules?query=engineering');
@@ -259,6 +264,30 @@ describe('/api/schedules', () => {
       expect(response.status).toBe(200);
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('query=engineering'),
+        expect.any(Object)
+      );
+    });
+
+    it('should pass pagination parameters to PagerDuty API', async () => {
+      getServerSession.mockResolvedValue({
+        user: { id: '123' },
+        accessToken: 'mock_access_token',
+      });
+
+      (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
+        ok: true,
+        json: async () => ({ schedules: [], more: false }),
+      } as Response);
+
+      const request = createMockRequest('http://localhost:3000/api/schedules?limit=16&offset=16');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.limit).toBe(16);
+      expect(data.offset).toBe(16);
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringMatching(/limit=16.*offset=16|offset=16.*limit=16/),
         expect.any(Object)
       );
     });
@@ -290,7 +319,7 @@ describe('/api/schedules', () => {
 
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
         ok: true,
-        json: async () => ({ schedules: [] }),
+        json: async () => ({ schedules: [], more: false }),
       } as Response);
 
       const request = createMockRequest('http://localhost:3000/api/schedules');
@@ -300,6 +329,8 @@ describe('/api/schedules', () => {
       expect(response.status).toBe(200);
       expect(data.schedules).toEqual([]);
       expect(data.total).toBe(0);
+      expect(data.limit).toBe(16);
+      expect(data.offset).toBe(0);
     });
   });
 });

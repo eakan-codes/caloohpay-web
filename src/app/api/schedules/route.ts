@@ -17,11 +17,14 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('query') || '';
+    const limit = searchParams.get('limit') || '16';
+    const offset = searchParams.get('offset') || '0';
 
     // Build PagerDuty API URL
     const baseUrl = 'https://api.pagerduty.com/schedules';
     const params = new URLSearchParams({
-      limit: '100',
+      limit,
+      offset,
       ...(query && { query }),
     });
 
@@ -54,6 +57,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       schedules: data.schedules || [],
       total: data.schedules?.length || 0,
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
+      more: data.more || false,
     });
   } catch (error) {
     console.error('Error fetching schedules:', error);
