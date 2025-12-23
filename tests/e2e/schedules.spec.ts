@@ -176,6 +176,204 @@ test.describe('Schedules Page', () => {
       await expect(page.getByText('America/New_York')).toBeVisible();
       await expect(page.getByText('UTC')).toBeVisible();
     });
+
+    test.skip('should display pagination controls when there are more than 16 schedules', async ({
+      page,
+    }) => {
+      // TODO: Mock authenticated session with 20+ schedules
+      // Note: Pagination controls only appear when totalPages > 1
+      // With 20 schedules, we have 2 pages (16 + 4)
+
+      // Check for pagination buttons
+      await expect(page.getByRole('button', { name: /first/i })).toBeVisible();
+      await expect(page.getByRole('button', { name: /previous/i })).toBeVisible();
+      await expect(page.getByRole('button', { name: /next/i })).toBeVisible();
+      await expect(page.getByRole('button', { name: /last/i })).toBeVisible();
+
+      // Check for Material-UI Pagination component
+      await expect(page.locator('nav[aria-label="pagination navigation"]')).toBeVisible();
+    });
+
+    test.skip('should display only 16 schedules per page', async ({ page }) => {
+      // TODO: Mock authenticated session with 20+ schedules
+
+      // Check that exactly 16 schedules are displayed
+      const schedules = page.locator('[role="article"]');
+      await expect(schedules).toHaveCount(16);
+    });
+
+    test.skip('should navigate to next page when Next button is clicked', async ({ page }) => {
+      // TODO: Mock authenticated session with 20+ schedules
+
+      const nextButton = page.getByRole('button', { name: /next/i });
+      await nextButton.click();
+
+      // Should show page 2 indicator (format: "Page 2 of X • Showing Y of Z")
+      await expect(page.getByText(/page 2 of/i)).toBeVisible();
+
+      // First and Previous buttons should be enabled
+      await expect(page.getByRole('button', { name: /first/i })).toBeEnabled();
+      await expect(page.getByRole('button', { name: /previous/i })).toBeEnabled();
+    });
+
+    test.skip('should navigate to previous page when Previous button is clicked', async ({
+      page,
+    }) => {
+      // TODO: Mock authenticated session with 20+ schedules
+
+      // Navigate to page 2 first
+      const nextButton = page.getByRole('button', { name: /next/i });
+      await nextButton.click();
+      await expect(page.getByText(/page 2 of/i)).toBeVisible();
+
+      // Navigate back to page 1
+      const prevButton = page.getByRole('button', { name: /previous/i });
+      await prevButton.click();
+
+      // Should show page 1 indicator
+      await expect(page.getByText(/page 1 of/i)).toBeVisible();
+
+      // First and Previous buttons should be disabled
+      await expect(page.getByRole('button', { name: /first/i })).toBeDisabled();
+      await expect(page.getByRole('button', { name: /previous/i })).toBeDisabled();
+    });
+
+    test.skip('should navigate to first page when First button is clicked', async ({ page }) => {
+      // TODO: Mock authenticated session with 40+ schedules
+
+      // Navigate to page 3
+      const nextButton = page.getByRole('button', { name: /next/i });
+      await nextButton.click();
+      await nextButton.click();
+      await expect(page.getByText(/page 3 of/i)).toBeVisible();
+
+      // Navigate to first page
+      const firstButton = page.getByRole('button', { name: /first/i });
+      await firstButton.click();
+
+      // Should show page 1
+      await expect(page.getByText(/page 1 of/i)).toBeVisible();
+    });
+
+    test.skip('should navigate to last page when Last button is clicked', async ({ page }) => {
+      // TODO: Mock authenticated session with 40+ schedules
+
+      // Navigate to last page
+      const lastButton = page.getByRole('button', { name: /last/i });
+      await lastButton.click();
+
+      // Should show last page indicator
+      await expect(page.getByText(/page \d+ of \d+/i)).toBeVisible();
+
+      // Next and Last buttons should be disabled
+      await expect(page.getByRole('button', { name: /next/i })).toBeDisabled();
+      await expect(page.getByRole('button', { name: /last/i })).toBeDisabled();
+    });
+
+    test.skip('should navigate to specific page using pagination component', async ({ page }) => {
+      // TODO: Mock authenticated session with 40+ schedules
+
+      // Click on page 2 button in pagination
+      await page.getByRole('button', { name: '2' }).click();
+
+      // Should show page 2 indicator
+      await expect(page.getByText(/page 2 of/i)).toBeVisible();
+
+      // Should display different schedules
+      const schedules = page.locator('[role="article"]');
+      await expect(schedules).toHaveCount(16);
+    });
+
+    test.skip('should scroll to top when navigating pages', async ({ page }) => {
+      // TODO: Mock authenticated session with 20+ schedules
+
+      // Scroll down
+      await page.evaluate(() => window.scrollTo(0, 500));
+
+      // Navigate to next page
+      const nextButton = page.getByRole('button', { name: /next/i });
+      await nextButton.click();
+
+      // Should scroll back to top
+      await page.waitForTimeout(500); // Wait for smooth scroll
+      const scrollY = await page.evaluate(() => window.scrollY);
+      expect(scrollY).toBeLessThan(100);
+    });
+
+    test.skip('should show client-side search indicator', async ({ page }) => {
+      // TODO: Mock authenticated session with schedules cached
+
+      const searchInput = page.getByPlaceholder(/Search schedules by name/i);
+      await searchInput.fill('engineering');
+
+      // Should show client-side search indicator
+      await expect(page.getByText(/client-side search/i)).toBeVisible();
+    });
+
+    test.skip('should show API search indicator when no cached results', async ({ page }) => {
+      // TODO: Mock authenticated session with limited cached schedules
+
+      const searchInput = page.getByPlaceholder(/Search schedules by name/i);
+      await searchInput.fill('unique schedule name not in cache');
+
+      // Should show API search indicator
+      await expect(page.getByText(/API search/i)).toBeVisible();
+    });
+
+    test.skip('should reset to page 1 when searching', async ({ page }) => {
+      // TODO: Mock authenticated session with 40+ schedules
+
+      // Navigate to page 2
+      const nextButton = page.getByRole('button', { name: /next/i });
+      await nextButton.click();
+      await expect(page.getByText(/page 2 of/i)).toBeVisible();
+
+      // Search for schedules
+      const searchInput = page.getByPlaceholder(/Search schedules by name/i);
+      await searchInput.fill('engineering');
+
+      // Should reset to page 1
+      await expect(page.getByText(/page 1 of/i)).toBeVisible();
+    });
+
+    test.skip('should hide pagination when search results fit on one page', async ({ page }) => {
+      // TODO: Mock authenticated session with 40+ schedules (3 pages)
+
+      // Initially pagination should be visible (totalPages > 1)
+      await expect(page.getByRole('button', { name: /next/i })).toBeVisible();
+
+      // Search with few results (less than 16)
+      const searchInput = page.getByPlaceholder(/Search schedules by name/i);
+      await searchInput.fill('unique specific name');
+
+      // Pagination should be hidden when only 1 page of results
+      await expect(page.getByRole('button', { name: /next/i })).not.toBeVisible();
+    });
+
+    test.skip('should display grid with 4 columns on desktop', async ({ page }) => {
+      // TODO: Mock authenticated session with schedules
+
+      // Set desktop viewport
+      await page.setViewportSize({ width: 1280, height: 720 });
+
+      // Find the grid container with the schedules
+      const grid = page.locator('[role="article"]').first().locator('xpath=..');
+      const gridTemplate = await grid.evaluate(
+        (el) => window.getComputedStyle(el).gridTemplateColumns
+      );
+
+      // Should have 4 columns on desktop (md breakpoint)
+      // Grid uses repeat(4, 1fr) for md and above
+      expect(gridTemplate.split(' ').length).toBe(4);
+    });
+
+    test.skip('should display pagination info text', async ({ page }) => {
+      // TODO: Mock authenticated session with 20+ schedules
+
+      // Should show pagination info like "Page 1 of 2 • Showing 16 of 20"
+      await expect(page.getByText(/page \d+ of \d+/i)).toBeVisible();
+      await expect(page.getByText(/showing \d+ of \d+/i)).toBeVisible();
+    });
   });
 });
 
@@ -190,6 +388,29 @@ test.describe('Schedules Page - Integration', () => {
 
     // Should navigate to schedule detail page
     await expect(page).toHaveURL(/\/schedules\/[A-Z0-9]+/);
+  });
+
+  test.skip('should maintain pagination state during navigation', async ({ page }) => {
+    // TODO: Mock authenticated session with 40+ schedules
+
+    await page.goto('/schedules');
+
+    // Navigate to page 2
+    const nextButton = page.getByRole('button', { name: /next/i });
+    await nextButton.click();
+    await expect(page.getByText(/page 2 of/i)).toBeVisible();
+
+    // Click on a schedule to navigate away
+    const firstCard = page.locator('[role="article"]').first();
+    await firstCard.click();
+    await expect(page).toHaveURL(/\/schedules\/[A-Z0-9]+/);
+
+    // Navigate back
+    await page.goBack();
+
+    // Should remember we were on page 2 (if state is preserved)
+    // Note: This behavior depends on implementation
+    await expect(page.getByText(/page \d+ of/i)).toBeVisible();
   });
 
   test.skip('should preserve Header and Footer', async ({ page }) => {
