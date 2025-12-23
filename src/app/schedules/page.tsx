@@ -169,8 +169,10 @@ export default function SchedulesPage() {
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
-  // Show pagination if we have more than one page OR if API says there's more
-  const showPagination = totalPages > 1 || data?.more;
+  // Always show pagination controls if we have data, but disable buttons based on state
+  const showPagination = (data?.schedules && data.schedules.length > 0) || isLoading;
+  const isFirstPage = page === 1;
+  const isLastPage = !data?.more; // Use 'more' flag to determine if we're on last page
 
   // Pagination handlers
   const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
@@ -354,24 +356,24 @@ export default function SchedulesPage() {
                   <ButtonGroup variant="outlined" size="large">
                     <Button
                       onClick={handleFirstPage}
-                      disabled={page === 1}
+                      disabled={isFirstPage}
                       startIcon={<FirstPageIcon />}
                     >
                       First
                     </Button>
-                    <Button onClick={handlePrevPage} disabled={page === 1} startIcon={<PrevIcon />}>
+                    <Button
+                      onClick={handlePrevPage}
+                      disabled={isFirstPage}
+                      startIcon={<PrevIcon />}
+                    >
                       Previous
                     </Button>
-                    <Button
-                      onClick={handleNextPage}
-                      disabled={page === totalPages}
-                      endIcon={<NextIcon />}
-                    >
+                    <Button onClick={handleNextPage} disabled={isLastPage} endIcon={<NextIcon />}>
                       Next
                     </Button>
                     <Button
                       onClick={handleLastPage}
-                      disabled={page === totalPages}
+                      disabled={isLastPage}
                       endIcon={<LastPageIcon />}
                     >
                       Last

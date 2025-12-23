@@ -109,7 +109,7 @@ describe('/api/schedules', () => {
 
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
         ok: true,
-        json: async () => ({ schedules: mockSchedules, more: false }),
+        json: async () => ({ schedules: mockSchedules, more: false, total: 2 }),
       } as Response);
 
       const request = createMockRequest('http://localhost:3000/api/schedules');
@@ -153,7 +153,7 @@ describe('/api/schedules', () => {
 
       (global.fetch as jest.MockedFunction<typeof fetch>).mockResolvedValue({
         ok: true,
-        json: async () => ({ schedules: mockSchedules, more: false }),
+        json: async () => ({ schedules: mockSchedules, more: false, total: 1 }),
       } as Response);
 
       const request = createMockRequest('http://localhost:3000/api/schedules');
