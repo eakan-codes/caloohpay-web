@@ -337,32 +337,53 @@ git push origin feature/your-feature
 
 ## 📊 Project Status
 
-### Overall Progress: 60% Complete
+### Overall Progress: 65% Complete
 
 - ✅ **Phase 1: Foundation** - 100% Complete
   - Project setup, dependencies, structure
   - Git hooks, linting, formatting configured
 - ✅ **Phase 2: Core Infrastructure** - 100% Complete
-  - ✅ Payment calculation engine (OnCallPeriod, OnCallUser, PaymentCalculator)
+  - ✅ Payment calculation engine (using official caloohpay@2.1.0 package)
   - ✅ Common UI components (Header, Footer, Error, Loading)
   - ✅ API client (PagerDuty integration)
   - ✅ Utilities (CSV export, schedule processing)
-  - ✅ **Authentication** - Complete with NextAuth.js + PagerDuty OAuth
+  - ✅ **Authentication** - Complete with NextAuth.js + PagerDuty OAuth + API Token
   - ✅ Comprehensive AUTHENTICATION.md documentation
   - ✅ 14 passing authentication unit tests
   - ✅ E2E authentication tests
-- 🔄 **Phase 3: Schedule Features** - 40% Complete
+- 🔄 **Phase 3: Schedule Features** - 70% Complete
   - ✅ Schedule listing page (/schedules)
   - ✅ Search and filter functionality
   - ✅ PagerDuty API integration
   - ✅ 8 unit tests for schedules API
   - ✅ E2E test structure (18 test cases)
-  - ⏳ Schedule detail view (pending)
+  - ✅ Schedule detail view (/schedules/[id])
+  - ✅ On-call period display with compensation calculation
+  - ✅ Browser-compatible caloohpay/core integration
+  - ⏳ CSV export functionality (UI exists, needs wiring)
   - ⏳ Monthly calendar view (pending)
-- 🔄 **Phase 4: Payment Display** - 0% Complete
-- 🔄 **Phase 5: Data Grid & Export** - 0% Complete
-- 🔄 **Phase 6: Testing** - 50% Complete (auth covered, schedules partial)
-- 🔄 **Phase 7: Deployment** - 0% Complete
+- 🔄 **Phase 4: Payment Display** - 40% Complete
+  - ✅ Individual period compensation display
+  - ✅ Per-user totals with weekday/weekend breakdown
+  - ⏳ Aggregate payment dashboard (pending)
+  - ⏳ Date range filtering (pending)
+- 🔄 **Phase 5: Data Grid & Export** - 20% Complete
+  - ✅ CSV export utilities implemented
+  - ⏳ Export button integration (pending)
+  - ⏳ Multi-schedule export (pending)
+- 🔄 **Phase 6: Testing** - 45% Complete
+  - ✅ Auth covered (24 tests passing)
+  - ✅ Schedules API partial coverage
+  - ⚠️ 0% utility function coverage
+  - ⚠️ No integration tests
+  - ✅ E2E test structure ready
+- 🔄 **Phase 7: Code Quality** - 60% Complete
+  - ✅ No duplicate code (refactored)
+  - ✅ Browser-compatible dependencies
+  - ✅ Centralized constants
+  - ✅ TypeScript strict mode
+  - ⚠️ 14 issues identified for improvement
+- 🔄 **Phase 8: Deployment** - 0% Complete
 
 ---
 
@@ -461,8 +482,6 @@ NEXTAUTH_SECRET=
 
 NEXT_PUBLIC_APP_URL=
 
-```
-
 ---
 
 ## 🎨 Design System Ready
@@ -493,6 +512,99 @@ NEXT_PUBLIC_APP_URL=
 
 ---
 
-**Last Updated**: November 6, 2025
-**Next Session**: Continue with Authentication & Core Features
+## 🎉 Recent Progress (December 23, 2025)
+
+### Code Quality & Integration Improvements ✅
+
+#### 1. Codebase Analysis & AI Agent Instructions
+
+- ✅ Created comprehensive `.github/copilot-instructions.md`
+- ✅ Documented architecture patterns, workflows, and conventions
+- ✅ Included critical integration points and testing gotchas
+- ✅ Added project-specific patterns for AI agent productivity
+
+#### 2. Critical Bug Fixes & Refactoring
+
+- ✅ **Fixed duplicate payment logic** - Removed 130+ lines of duplicate `OnCallPeriod` class
+- ✅ **Integrated official caloohpay package** - Now using `caloohpay@2.1.0`
+- ✅ **Browser compatibility fix** - Migrated to `caloohpay/core` exports
+  - Resolves "Module not found: Can't resolve 'fs'" build errors
+  - Uses browser-compatible exports only (no Node.js dependencies)
+- ✅ **Fixed dual authentication support** - SWR fetcher now correctly handles both OAuth and API Token auth
+- ✅ **Centralized constants usage** - Replaced hardcoded rates with `PAYMENT_RATES` from constants
+
+#### 3. Code Review Findings Addressed
+
+- ✅ **CRITICAL**: Removed duplicate OnCallPeriod implementation (-106 lines, -18%)
+- ✅ **HIGH**: Fixed API token authentication in schedule detail page
+- ✅ **MEDIUM**: Updated all imports to use browser-compatible `caloohpay/core`
+- 📋 **Documented**: 14 additional issues identified for future improvement
+  - Missing environment variable validation
+  - No rate limit handling
+  - Missing CSRF protection
+  - Empty unit tests directory
+  - Console.log in production code
+
+#### 4. Testing & Build Verification
+
+- ✅ All TypeScript type checks pass
+- ✅ ESLint passes with no errors
+- ✅ All 24 unit tests passing (2 test suites)
+- ✅ Production build completes successfully
+- ✅ No Node.js module bundling errors
+
+### Files Updated (December 23, 2025)
+
+Modified:
+
+- src/app/schedules/[id]/page.tsx (167 lines removed)
+- src/lib/caloohpay.ts (updated to caloohpay/core)
+- src/lib/types/index.ts (updated to caloohpay/core)
+- src/lib/utils/csvExport.ts (updated to caloohpay/core)
+- src/lib/utils/scheduleUtils.ts (updated to caloohpay/core)
+- package.json (caloohpay@2.1.0)
+- package-lock.json
+
+Created:
+
+- .github/copilot-instructions.md (comprehensive AI agent guide)
+
+### Recent Commits (December 23, 2025)
+
+```bash
+4337bd5 - fix(caloohpay): use browser-compatible caloohpay/core exports
+          Impact: -144 lines, fixes build error, reduces technical debt
 ```
+
+---
+
+## 🎯 Next Priorities
+
+### Immediate (High Priority)
+
+1. **Add environment variable validation** - Prevent cryptic runtime failures
+2. **Create missing middleware.ts** - Route protection currently not working
+3. **Add rate limit handling** - Prevent PagerDuty API throttling
+4. **Write unit tests** - Currently 0% coverage for utilities
+
+### Short Term
+
+1. **Schedule Detail View Enhancements**
+   - Integrate payment calculation display
+   - Add CSV export functionality
+   - Improve error handling
+2. **Add CSRF protection** - Secure API routes
+3. **Replace console.log** - Use proper logging library
+4. **Add security headers** - Configure Next.js security headers
+
+### Medium Term
+
+1. **Calendar View Implementation** - Monthly schedule visualization
+2. **Payment Dashboard** - Aggregate view across schedules
+3. **Audit Logging** - Track calculations for compliance
+4. **Performance Optimization** - Add caching, optimize renders
+
+---
+
+**Last Updated**: December 23, 2025
+**Next Session**: Environment validation, middleware creation, and unit test coverage
