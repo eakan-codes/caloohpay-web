@@ -145,19 +145,18 @@ export default function SchedulesPage() {
 
   // Paginate client-filtered results
   const paginatedClientResults = useMemo(() => {
-    if (!useClientSideFiltering) return [];
+    if (!useClientSideFiltering || !searchQuery) return [];
 
     const start = (page - 1) * ITEMS_PER_PAGE;
     const end = start + ITEMS_PER_PAGE;
     return clientFilteredSchedules.slice(start, end);
-  }, [clientFilteredSchedules, page, useClientSideFiltering]);
+  }, [clientFilteredSchedules, page, useClientSideFiltering, searchQuery]);
 
   // Final schedules to display
-  const displaySchedules = useClientSideFiltering
-    ? searchQuery
-      ? paginatedClientResults
-      : data?.schedules || []
-    : data?.schedules || [];
+  // When searching: use client-side paginated results if available, otherwise API results
+  // When not searching: always use API results (which reflects current page via offset)
+  const displaySchedules =
+    searchQuery && useClientSideFiltering ? paginatedClientResults : data?.schedules || [];
 
   // Total count and pages
   // When not searching, use estimated total from API (based on 'more' flag)
