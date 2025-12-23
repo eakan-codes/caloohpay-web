@@ -2,11 +2,19 @@
 
 import { Box, Container, Link as MUILink, Stack, Typography } from '@mui/material';
 import { GitHub as GitHubIcon } from '@mui/icons-material';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { APP_METADATA } from '@/lib/constants';
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
+  // Use a fixed year initially to avoid hydration mismatch
+  const [currentYear, setCurrentYear] = useState(2025);
+
+  // Update year after hydration
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   return (
     <Box
