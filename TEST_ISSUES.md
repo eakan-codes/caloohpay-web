@@ -2,14 +2,41 @@
 
 Comprehensive list of testing issues, gaps, and improvements needed for CalOohPay Web.
 
-**Last Updated**: December 25, 2025  
-**Current Test Count**: 113 passing (9 test suites), 75 E2E passing  
+**Last Updated**: December 26, 2025  
+**Current Test Count**: 122 passing (10 test suites), 75 E2E passing  
 **Current Coverage**: ~60%  
 **Target Coverage**: 85%+
 
 ---
 
 ## ✅ RECENTLY FIXED
+
+### NextAuth Route Handler - Zero Coverage
+
+**Status**: ✅ FIXED  
+**Date**: December 26, 2025
+
+**Previous Issue**:
+Core authentication endpoint at `src/app/api/auth/[...nextauth]/route.ts` had 0% test coverage. This is a critical passthrough to NextAuth that needed verification of proper configuration.
+
+**Impact**:
+
+- Authentication failures could break the entire app
+- NextAuth misconfiguration would go undetected
+- No verification that authOptions were properly exported
+
+**Fix Applied**:
+Created comprehensive test suite at `src/app/api/auth/[...nextauth]/__tests__/route.test.ts` with 9 tests covering:
+
+- NextAuth initialization with authOptions
+- Handler configuration and Next.js App Router compatibility
+- GET and POST handler exports and signatures
+- Integration with OAuth and Credentials providers
+- Error handling and environment variable management
+
+**Result**: Achieved 100% code coverage (statements, branches, functions, lines) for the NextAuth route handler.
+
+---
 
 ### Console Error Tests - Hydration Warnings
 
@@ -44,37 +71,7 @@ Enhanced `isAcceptableMessage()` filter in `tests/e2e/console.spec.ts` to exclud
 
 ## 🔴 CRITICAL PRIORITY
 
-### 1. Zero Coverage - NextAuth Route Handler
-
-**File**: `src/app/api/auth/[...nextauth]/route.ts`  
-**Coverage**: 0%  
-**Lines**: 1-12
-
-**Issue**: Core authentication endpoint completely untested. This is a passthrough to NextAuth but should verify proper configuration.
-
-**Impact**:
-
-- Authentication failures could break the entire app
-- NextAuth misconfiguration undetected
-- No verification that authOptions are properly exported
-
-**Suggested Fix**:
-Create `src/app/api/auth/[...nextauth]/__tests__/route.test.ts`:
-
-```typescript
-describe('NextAuth Route', () => {
-  it('should export GET handler');
-  it('should export POST handler');
-  it('should use authOptions from lib/auth/options');
-  it('should handle basic auth requests');
-});
-```
-
-**Estimated Effort**: 1 hour
-
----
-
-### 2. Zero Coverage - Individual Schedule API Route
+### 1. Zero Coverage - Individual Schedule API Route
 
 **File**: `src/app/api/schedules/[id]/route.ts`  
 **Coverage**: 0%  
@@ -109,7 +106,7 @@ describe('GET /api/schedules/[id]', () => {
 
 ---
 
-### 3. Zero Coverage - PagerDuty API Client
+### 2. Zero Coverage - PagerDuty API Client
 
 **File**: `src/lib/api/pagerduty.ts`  
 **Coverage**: 0%  
