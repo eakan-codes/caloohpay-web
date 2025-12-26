@@ -670,11 +670,12 @@ export function ThemeProvider({ children }) {
 ### Testing Pyramid
 
 ```console
-        /\
-       /  \
-      / E2E \
-     /--------\
-    /  API     \
+         /\
+        /  \
+       /    \
+      /  E2E \
+     /------- \
+    /    API   \
    /------------\
   /   Unit Tests \
  /________________\

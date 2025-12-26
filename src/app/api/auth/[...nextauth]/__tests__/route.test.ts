@@ -95,7 +95,7 @@ describe('NextAuth Route Handler', () => {
 
     it('should support both OAuth and Credentials providers', async () => {
       // Import actual authOptions (unmocked for this test)
-      jest.isolateModulesAsync(async () => {
+      await jest.isolateModulesAsync(async () => {
         // This verifies the actual file exports valid authOptions
         const { authOptions: actualAuthOptions } = await import('@/lib/auth/options');
         expect(actualAuthOptions.providers).toBeDefined();
