@@ -311,6 +311,71 @@ describe('calculatePayment', () => {
 });
 ```
 
+### Testing the Schedule Detail Page
+
+The Schedule Detail Page (`src/app/schedules/[id]/`) is structured with modular components and hooks. When testing changes:
+
+#### Test Custom Hooks
+
+Located in `src/app/schedules/[id]/hooks/__tests__/`:
+
+- Test state initialization
+- Test state changes from callbacks
+- Verify memoization with `renderHook` from `@testing-library/react`
+
+Example:
+
+```typescript
+import { renderHook, act } from '@testing-library/react';
+import { useDateRangeNavigation } from '../useDateRangeNavigation';
+
+it('navigates to next month', () => {
+  const { result } = renderHook(() => useDateRangeNavigation());
+
+  act(() => {
+    result.current.handleNextMonth();
+  });
+
+  expect(result.current.currentMonthDisplay).toBeTruthy();
+});
+```
+
+#### Test Components
+
+Located in `src/app/schedules/[id]/components/__tests__/`:
+
+- Test with relevant props
+- Verify rendering and user interactions
+- Mock child components as needed
+
+Example:
+
+```typescript
+import { render, screen } from '@testing-library/react';
+import ScheduleHeader from '../ScheduleHeader';
+
+it('renders schedule name', () => {
+  render(
+    <ScheduleHeader
+      scheduleName="Engineering On-Call"
+      timeZone="UTC"
+      onBack={jest.fn()}
+    />
+  );
+
+  expect(screen.getByText('Engineering On-Call')).toBeInTheDocument();
+});
+```
+
+#### Test Data Fetchers
+
+Located in `src/lib/api/__tests__/`:
+
+- Test successful API responses
+- Test error handling
+- Mock `fetch` with `jest.fn()`
+- Test authentication header handling
+
 ### Integration Tests
 
 - Test component interactions

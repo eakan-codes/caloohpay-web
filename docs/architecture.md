@@ -398,6 +398,55 @@ App Layout
 └── ErrorBoundary
 ```
 
+### Schedule Detail Page Architecture
+
+The Schedule Detail Page (`src/app/schedules/[id]/page.tsx`) implements a modularized architecture to ensure maintainability and testability:
+
+#### Components
+
+Located in `src/app/schedules/[id]/components/`:
+
+- **ScheduleHeader**: Displays schedule name, description, and timezone
+- **ScheduleActions**: Contains "Calculate Payments" and "View in PagerDuty" buttons
+- **OnCallSchedule**: Main display component with user schedules and on-call periods
+  - Sub-components:
+    - **UserScheduleCard**: Individual user's schedule card with totals
+    - **PeriodEntry**: Single on-call period with compensation breakdown
+
+#### Custom Hooks
+
+Located in `src/app/schedules/[id]/hooks/`:
+
+- **useScheduleData**: Fetches schedule data from API, processes entries, calculates compensation
+  - Integrates with `scheduleDetailFetcher` from `src/lib/api/fetchers.ts`
+  - Uses `OnCallPaymentsCalculator` for accurate compensation
+  - Returns processed `UserSchedule[]` array
+- **useDateRangeNavigation**: Manages month navigation state
+  - Maintains `dateRange` with ISO date strings
+  - Provides `currentMonthDisplay` formatted string
+  - Callbacks: `handlePreviousMonth`, `handleNextMonth`
+
+- **useViewMode**: Manages list/calendar view toggle
+  - State: 'list' or 'calendar'
+  - Callback: `handleViewModeChange`
+
+#### Data Fetcher
+
+Located in `src/lib/api/fetchers.ts`:
+
+- **scheduleDetailFetcher**: SWR-compatible fetcher for schedule API calls
+  - Handles OAuth and API token authentication
+  - Error handling with meaningful messages
+  - Properly typed with `ScheduleResponse` interface
+
+#### Benefits of This Architecture
+
+1. **Separation of Concerns**: Each component/hook has a single responsibility
+2. **Reusability**: Custom hooks can be used in other components
+3. **Testability**: Small, focused modules are easier to test
+4. **Maintainability**: Reduced file size (173 lines vs 346 lines pre-refactor)
+5. **Performance**: Memoized components prevent unnecessary re-renders
+
 ### Common Components
 
 Located in `src/components/common/`:
