@@ -22,6 +22,7 @@ import ScheduleHeader from './components/ScheduleHeader';
 import ScheduleActions from './components/ScheduleActions';
 import OnCallSchedule from './components/OnCallSchedule';
 import { useScheduleData, useDateRangeNavigation, useViewMode } from './hooks';
+import { ViewMode } from './constants';
 import * as styles from './page.styles';
 
 export default function ScheduleDetailPage() {
@@ -131,11 +132,11 @@ export default function ScheduleDetailPage() {
               aria-label="view mode"
               size="small"
             >
-              <ToggleButton value="list" aria-label="list view">
+              <ToggleButton value={ViewMode.List} aria-label="list view">
                 <ViewList sx={styles.toggleButtonIcon} />
                 List View
               </ToggleButton>
-              <ToggleButton value="calendar" aria-label="calendar view">
+              <ToggleButton value={ViewMode.Calendar} aria-label="calendar view">
                 <CalendarMonth sx={styles.toggleButtonIcon} />
                 Calendar View
               </ToggleButton>
@@ -150,7 +151,7 @@ export default function ScheduleDetailPage() {
         </Paper>
 
         {/* Schedule Display - Toggle between list and calendar views */}
-        {viewMode === 'calendar' ? (
+        {viewMode === ViewMode.Calendar ? (
           <Paper sx={styles.scheduleDisplayContainer}>
             <CalendarView
               events={calendarEvents}

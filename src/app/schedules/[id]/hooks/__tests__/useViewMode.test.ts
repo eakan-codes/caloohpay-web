@@ -1,11 +1,12 @@
 import { renderHook, act } from '@testing-library/react';
 import { useViewMode } from '../useViewMode';
+import { ViewMode } from '../../constants';
 
 describe('useViewMode', () => {
   it('initializes with list view mode', () => {
     const { result } = renderHook(() => useViewMode());
 
-    expect(result.current.viewMode).toBe('list');
+    expect(result.current.viewMode).toBe(ViewMode.List);
   });
 
   it('changes view mode to calendar', () => {
@@ -13,10 +14,10 @@ describe('useViewMode', () => {
 
     act(() => {
       const mockEvent = {} as React.MouseEvent<HTMLElement>;
-      result.current.handleViewModeChange(mockEvent, 'calendar');
+      result.current.handleViewModeChange(mockEvent, ViewMode.Calendar);
     });
 
-    expect(result.current.viewMode).toBe('calendar');
+    expect(result.current.viewMode).toBe(ViewMode.Calendar);
   });
 
   it('changes view mode back to list', () => {
@@ -24,17 +25,17 @@ describe('useViewMode', () => {
 
     act(() => {
       const mockEvent = {} as React.MouseEvent<HTMLElement>;
-      result.current.handleViewModeChange(mockEvent, 'calendar');
+      result.current.handleViewModeChange(mockEvent, ViewMode.Calendar);
     });
 
-    expect(result.current.viewMode).toBe('calendar');
+    expect(result.current.viewMode).toBe(ViewMode.Calendar);
 
     act(() => {
       const mockEvent = {} as React.MouseEvent<HTMLElement>;
-      result.current.handleViewModeChange(mockEvent, 'list');
+      result.current.handleViewModeChange(mockEvent, ViewMode.List);
     });
 
-    expect(result.current.viewMode).toBe('list');
+    expect(result.current.viewMode).toBe(ViewMode.List);
   });
 
   it('ignores null view mode changes', () => {
@@ -46,7 +47,7 @@ describe('useViewMode', () => {
     });
 
     // Should remain in initial state
-    expect(result.current.viewMode).toBe('list');
+    expect(result.current.viewMode).toBe(ViewMode.List);
   });
 
   it('provides stable callback reference', () => {
@@ -68,18 +69,18 @@ describe('useViewMode', () => {
     const mockEvent = {} as React.MouseEvent<HTMLElement>;
 
     act(() => {
-      result.current.handleViewModeChange(mockEvent, 'calendar');
+      result.current.handleViewModeChange(mockEvent, ViewMode.Calendar);
     });
-    expect(result.current.viewMode).toBe('calendar');
+    expect(result.current.viewMode).toBe(ViewMode.Calendar);
 
     act(() => {
-      result.current.handleViewModeChange(mockEvent, 'list');
+      result.current.handleViewModeChange(mockEvent, ViewMode.List);
     });
-    expect(result.current.viewMode).toBe('list');
+    expect(result.current.viewMode).toBe(ViewMode.List);
 
     act(() => {
-      result.current.handleViewModeChange(mockEvent, 'calendar');
+      result.current.handleViewModeChange(mockEvent, ViewMode.Calendar);
     });
-    expect(result.current.viewMode).toBe('calendar');
+    expect(result.current.viewMode).toBe(ViewMode.Calendar);
   });
 });

@@ -4,6 +4,7 @@
  */
 
 import type { SxProps, Theme } from '@mui/material';
+import { LAYOUT } from './constants';
 
 // Page layout styles
 export const pageContainer: SxProps<Theme> = {
@@ -13,23 +14,23 @@ export const pageContainer: SxProps<Theme> = {
 };
 
 export const contentContainer: SxProps<Theme> = {
-  maxWidth: 1200,
+  maxWidth: LAYOUT.MAX_WIDTH_DESKTOP,
   mx: 'auto',
-  py: 4,
+  py: LAYOUT.PADDING_VERTICAL,
   flex: 1,
 };
 
 export const errorContentContainer: SxProps<Theme> = {
-  maxWidth: 800,
+  maxWidth: LAYOUT.MAX_WIDTH_ERROR,
   mx: 'auto',
-  mt: 4,
-  mb: 4,
+  mt: LAYOUT.MARGIN_VERTICAL_ERROR,
+  mb: LAYOUT.MARGIN_VERTICAL_ERROR,
   flex: 1,
 };
 
 // Header styles
 export const headerContainer: SxProps<Theme> = {
-  mb: 4,
+  mb: LAYOUT.MARGIN_BOTTOM_HEADER,
 };
 
 export const headerTopRow: SxProps<Theme> = {
@@ -45,8 +46,8 @@ export const headerTitleContainer: SxProps<Theme> = {
 
 // View mode toggle styles
 export const viewModeContainer: SxProps<Theme> = {
-  p: 2,
-  mb: 3,
+  p: LAYOUT.PADDING_VIEW_MODE,
+  mb: LAYOUT.MARGIN_BOTTOM_VIEW_MODE,
 };
 
 export const viewModeInner: SxProps<Theme> = {
@@ -63,14 +64,14 @@ export const toggleButtonIcon: SxProps<Theme> = {
 
 // Schedule display styles
 export const scheduleDisplayContainer: SxProps<Theme> = {
-  p: 3,
-  mb: 3,
+  p: LAYOUT.PADDING_CARD,
+  mb: LAYOUT.MARGIN_BOTTOM_SCHEDULE,
 };
 
 // OnCallSchedule component styles
 export const loadingContainer: SxProps<Theme> = {
   position: 'relative',
-  minHeight: 300,
+  minHeight: LAYOUT.MIN_HEIGHT_LOADING,
 };
 
 export const scheduleTitle: SxProps<Theme> = {
@@ -138,7 +139,7 @@ export const compensationChipStyle: SxProps<Theme> = {
 
 // Actions styles
 export const actionsContainer: SxProps<Theme> = {
-  mt: 4,
+  mt: LAYOUT.MARGIN_TOP_ACTIONS,
   display: 'flex',
   gap: 2,
 };
