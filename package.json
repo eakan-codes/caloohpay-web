@@ -23,7 +23,7 @@
     "test:e2e:unauth:ui": "ENABLE_TEST_SESSION_SEED=false playwright test --ui --project=\"chromium (unauth)\" --project=\"firefox (unauth)\" --project=\"webkit (unauth)\"",
     "type-check": "tsc --noEmit",
     "prepare": "husky",
-    "postinstall": "playwright install --with-deps chromium"
+    "postinstall": "node -e \"if (process.env.VERCEL !== '1') require('child_process').execSync('playwright install --with-deps chromium', {stdio: 'inherit'})\""
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

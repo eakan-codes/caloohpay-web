@@ -33,7 +33,11 @@ This guide walks you through deploying CalOohPay Web to Vercel's free tier, whic
    - Select your `caloohpay-web` repository
    - Click "Import"
 
-3. **Configure environment variables** (see [Environment Variables](#environment-variables) section below)
+3. **Configure environment variables** (IMPORTANT - Do this before deploying):
+   - After clicking Import, you'll see the configuration screen
+   - Click "Environment Variables" section
+   - Add each required variable (see [Environment Variables](#environment-variables) section below)
+   - ⚠️ **Must add at minimum**: `NEXTAUTH_SECRET` and `NEXTAUTH_URL`
 
 4. **Deploy**:
    - Click "Deploy"
@@ -228,9 +232,11 @@ Every pull request gets its own preview URL:
 
 The app includes an automated health check at `/api/health`:
 
-- ✅ Runs every 5 minutes via Vercel Cron
+- ✅ Runs daily at midnight UTC via Vercel Cron
 - ✅ Returns 200 OK when healthy, 503 when unhealthy
 - ✅ Includes uptime, environment, and system status
+
+⚠️ **Note**: Vercel Hobby (free) tier allows 1 cron job with daily frequency only. For more frequent monitoring, use external uptime monitors or upgrade to Pro.
 
 **Test locally** (with `npm run dev` running):
 
