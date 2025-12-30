@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/next';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { SessionProvider } from '@/context/SessionProvider';
 import './globals.css';
@@ -21,6 +22,7 @@ export default function RootLayout({
         <SessionProvider>
           <ThemeProvider>{children}</ThemeProvider>
         </SessionProvider>
+        <Analytics />
       </body>
     </html>
   );
