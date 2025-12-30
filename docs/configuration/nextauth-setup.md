@@ -186,7 +186,7 @@ When the PagerDuty access token expires, NextAuth automatically refreshes it:
 ```typescript
 async function refreshAccessToken(token: JWT) {
   try {
-    const response = await fetch('https://identity.pagerduty.com/oauth/token', {
+    const response = await fetch('https://app.pagerduty.com/global/oauth/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({

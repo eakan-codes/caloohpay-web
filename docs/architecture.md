@@ -282,7 +282,7 @@ Automatic token refresh prevents users from being logged out:
 async function refreshAccessToken(token: JWT) {
   try {
     // Call PagerDuty token endpoint
-    const response = await fetch('https://identity.pagerduty.com/oauth/token', {
+    const response = await fetch('https://app.pagerduty.com/global/oauth/token', {
       method: 'POST',
       body: new URLSearchParams({
         grant_type: 'refresh_token',

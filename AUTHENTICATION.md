@@ -79,6 +79,29 @@ sequenceDiagram
     Browser->>User: Redirect to /schedules
 ```
 
+### OIDC Integration
+
+CalOohPay uses **OpenID Connect (OIDC)** for PagerDuty authentication, which provides enhanced security over plain OAuth 2.0:
+
+**Key OIDC Features:**
+
+- **ID Token Validation**: PagerDuty issues signed id_tokens validated via JWKS
+- **Issuer Verification**: Confirms authorization server identity (`app.pagerduty.com/global/oauth/anonymous`)
+- **OpenID Scope**: Requests `openid` scope alongside `read` for OIDC flow
+- **Two-Step Profile Fetch**:
+  1. OIDC userinfo endpoint returns `user_id` and basic claims
+  2. REST API call fetches complete user profile (name, email, avatar)
+
+**OIDC Endpoints:**
+
+- **Authorization**: `https://app.pagerduty.com/global/oauth/authorize`
+- **Token Exchange**: `https://app.pagerduty.com/global/oauth/token`
+- **Userinfo**: `https://app.pagerduty.com/global/oauth/userinfo`
+- **JWKS**: `https://app.pagerduty.com/global/oauth/anonymous/jwks`
+- **Issuer**: `https://app.pagerduty.com/global/oauth/anonymous`
+
+This OIDC implementation ensures secure authentication with cryptographic validation of tokens and issuer claims.
+
 ### Detailed Step-by-Step Flow
 
 1. **User Initiates Sign-In**
@@ -89,22 +112,29 @@ sequenceDiagram
    - NextAuth constructs authorization URL with required parameters:
      - `client_id`: PagerDuty application client ID
      - `redirect_uri`: Callback URL (`/api/auth/callback/pagerduty`)
-     - `scope`: `read write` (for schedule access)
+     - `scope`: `read openid` (OpenID Connect scope for OIDC authentication)
      - `response_type`: `code`
-   - User is redirected to PagerDuty's authorization page
+     - `issuer`: `https://app.pagerduty.com/global/oauth/anonymous`
+   - User is redirected to PagerDuty's OIDC authorization page
 
 3. **User Consent**
    - PagerDuty displays consent screen showing requested permissions
    - User reviews and approves access
 
 4. **Authorization Code Exchange**
-   - PagerDuty redirects back with authorization code
-   - NextAuth callback handler receives the code
-   - Backend exchanges code for tokens via POST to `https://app.pagerduty.com/oauth/token`
+   - PagerDuty redirects back with authorization code and issuer claim
+   - NextAuth callback handler validates the issuer claim
+   - Backend exchanges code for tokens via POST to `https://app.pagerduty.com/global/oauth/token`
+   - Receives: access_token, refresh_token, and id_token (OIDC)
 
-5. **User Profile Fetch**
-   - NextAuth fetches user profile from `https://api.pagerduty.com/users/me`
-   - Extracts user ID, name, email, and avatar
+5. **User Profile Fetch (Two-Step Process)**
+   - **Step 1 - OIDC Userinfo**: NextAuth fetches basic claims from OIDC userinfo endpoint
+     - Returns `user_id` and basic OIDC claims
+     - Validates id_token using JWKS from `https://app.pagerduty.com/global/oauth/anonymous/jwks`
+   - **Step 2 - Full User Details**: Uses `user_id` to fetch complete profile
+     - Calls `https://api.pagerduty.com/users/{user_id}` with Bearer token
+     - Retrieves full user data: name, email, avatar_url
+     - This two-step approach ensures we get both OIDC validation and complete user details
 
 6. **JWT Creation**
    - NextAuth creates a JWT containing:
@@ -341,7 +371,7 @@ Token refresh happens automatically in the JWT callback:
 ```typescript
 async function refreshAccessToken(token: JWT): Promise<JWT> {
   try {
-    const response = await fetch('https://app.pagerduty.com/oauth/token', {
+    const response = await fetch('https://app.pagerduty.com/global/oauth/token', {
       method: 'POST',
       body: new URLSearchParams({
         client_id: process.env.NEXT_PUBLIC_PAGERDUTY_CLIENT_ID!,
@@ -572,7 +602,7 @@ NEXTAUTH_SECRET=<generated_secret>
 
 **Solution**:
 
-- Verify scopes in `options.ts`: `scope: 'read write'`
+- Verify scopes in `options.ts`: `scope: 'read openid'` (OIDC)
 - Check user has PagerDuty account access
 - Have user re-authenticate
 

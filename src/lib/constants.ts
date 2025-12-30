@@ -75,6 +75,15 @@ export const API_ENDPOINTS = {
 } as const;
 
 /**
+ * PagerDuty API Base URLs
+ * All OAuth/OIDC endpoints use OAUTH_BASE per PagerDuty's OIDC configuration
+ */
+export const PAGERDUTY_URLS = {
+  OAUTH_BASE: 'https://app.pagerduty.com/global/oauth',
+  API_BASE: 'https://api.pagerduty.com',
+} as const;
+
+/**
  * Route paths
  */
 export const ROUTES = {
