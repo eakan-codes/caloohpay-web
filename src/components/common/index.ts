@@ -4,3 +4,7 @@ export { ErrorDisplay } from './ErrorDisplay';
 export { Footer } from './Footer';
 export { Header } from './Header';
 export { Loading } from './Loading';
+export { Logo } from './Logo';
+export { NavigationLinks } from './NavigationLinks';
+export { ThemeToggle } from './ThemeToggle';
+export { UserMenu } from './UserMenu';
