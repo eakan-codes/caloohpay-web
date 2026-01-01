@@ -22,6 +22,11 @@ const isValidRate = (value: unknown): boolean => {
 
 // Helper to load from localStorage with validation
 const loadFromStorage = (): Partial<SettingsState> => {
+  // Check if we're in a browser environment
+  if (typeof window === 'undefined') {
+    return {};
+  }
+
   const storageKey = 'settings';
   const stored = localStorage.getItem(storageKey);
   const initialState: Partial<SettingsState> = {};
@@ -47,6 +52,10 @@ const loadFromStorage = (): Partial<SettingsState> => {
 
 // Helper to persist to localStorage
 const persistToStorage = (state: { weekdayRate: number; weekendRate: number }) => {
+  // Check if we're in a browser environment
+  if (typeof window === 'undefined') {
+    return;
+  }
   localStorage.setItem('settings', JSON.stringify(state));
 };
 
