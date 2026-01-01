@@ -52,7 +52,14 @@ describe('Header', () => {
     expect(screen.getByText('Schedules')).toBeInTheDocument();
   });
 
-  it('should not show Schedules link when not authenticated', () => {
+  it('should show Settings link when authenticated', () => {
+    mockUseSession(makeSession());
+
+    render(<Header />);
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+  });
+
+  it('should not show Schedules or Settings links when not authenticated', () => {
     (useSession as jest.Mock).mockReturnValue({
       data: null,
       status: 'unauthenticated',
@@ -60,6 +67,7 @@ describe('Header', () => {
 
     render(<Header />);
     expect(screen.queryByText('Schedules')).not.toBeInTheDocument();
+    expect(screen.queryByText('Settings')).not.toBeInTheDocument();
   });
 
   it('should toggle theme when dark mode button is clicked', () => {

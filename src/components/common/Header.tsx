@@ -90,9 +90,14 @@ export function Header({ elevation }: HeaderProps) {
             {/* Navigation Links */}
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               {status === 'authenticated' && (
-                <Button color="inherit" component={Link} href={ROUTES.SCHEDULES}>
-                  Schedules
-                </Button>
+                <>
+                  <Button color="inherit" component={Link} href={ROUTES.SCHEDULES}>
+                    Schedules
+                  </Button>
+                  <Button color="inherit" component={Link} href={ROUTES.SETTINGS}>
+                    Settings
+                  </Button>
+                </>
               )}
 
               {/* Dark Mode Toggle */}
