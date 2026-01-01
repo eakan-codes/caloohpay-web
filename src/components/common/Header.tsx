@@ -19,6 +19,7 @@ import {
   Brightness7 as LightModeIcon,
   CalendarMonth as CalendarIcon,
   Logout as LogoutIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
@@ -90,14 +91,9 @@ export function Header({ elevation }: HeaderProps) {
             {/* Navigation Links */}
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               {status === 'authenticated' && (
-                <>
-                  <Button color="inherit" component={Link} href={ROUTES.SCHEDULES}>
-                    Schedules
-                  </Button>
-                  <Button color="inherit" component={Link} href={ROUTES.SETTINGS}>
-                    Settings
-                  </Button>
-                </>
+                <Button color="inherit" component={Link} href={ROUTES.SCHEDULES}>
+                  Schedules
+                </Button>
               )}
 
               {/* Dark Mode Toggle */}
@@ -133,6 +129,10 @@ export function Header({ elevation }: HeaderProps) {
                       <Typography variant="body2" color="text.secondary">
                         {session.user.email}
                       </Typography>
+                    </MenuItem>
+                    <MenuItem component={Link} href={ROUTES.SETTINGS} onClick={handleMenuClose}>
+                      <SettingsIcon fontSize="small" sx={{ mr: 1 }} />
+                      Settings
                     </MenuItem>
                     <MenuItem onClick={handleSignOut}>
                       <LogoutIcon fontSize="small" sx={{ mr: 1 }} />

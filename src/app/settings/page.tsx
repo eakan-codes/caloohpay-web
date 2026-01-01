@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { Container, Box, Typography, Alert, CircularProgress } from '@mui/material';
+import { Header, Footer } from '@/components/common';
 import { SettingsForm, type SettingsFormData } from '@/components/settings';
 import { useSettings } from '@/hooks';
 import { getSettingsStore } from '@/lib/stores';
@@ -44,49 +45,53 @@ export default function SettingsPage() {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: 4 }}>
-      {/* Page Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h1" component="h1" sx={{ mb: 1, fontSize: '2rem' }}>
-          Settings
-        </Typography>
-        <Typography variant="body1" color="textSecondary">
-          Customize your payment rates for on-call compensation calculations
-        </Typography>
-      </Box>
-
-      {/* Success Message */}
-      {showSuccess && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setShowSuccess(false)}>
-          Settings saved successfully!
-        </Alert>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Loading Indicator */}
-      {isLoading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-          <CircularProgress size={32} />
+    <>
+      <Header />
+      <Container maxWidth="sm" sx={{ py: 4 }}>
+        {/* Page Header */}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h1" component="h1" sx={{ mb: 1, fontSize: '2rem' }}>
+            Settings
+          </Typography>
+          <Typography variant="body1" color="textSecondary">
+            Customize your payment rates for on-call compensation calculations
+          </Typography>
         </Box>
-      )}
 
-      {/* Settings Form */}
-      <SettingsForm initialValues={initialValues} onSubmit={handleSubmit} isLoading={isLoading} />
+        {/* Success Message */}
+        {showSuccess && (
+          <Alert severity="success" sx={{ mb: 3 }} onClose={() => setShowSuccess(false)}>
+            Settings saved successfully!
+          </Alert>
+        )}
 
-      {/* Information Box */}
-      <Box sx={{ mt: 4, p: 2, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
-        <Typography variant="body2" color="textSecondary">
-          <strong>Note:</strong> These rates are used to calculate your on-call compensation.
-          Changes will be applied to new calculations immediately. Weekday rates apply
-          Monday–Thursday, and weekend rates apply Friday–Sunday.
-        </Typography>
-      </Box>
-    </Container>
+        {/* Error Message */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Loading Indicator */}
+        {isLoading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+            <CircularProgress size={32} />
+          </Box>
+        )}
+
+        {/* Settings Form */}
+        <SettingsForm initialValues={initialValues} onSubmit={handleSubmit} isLoading={isLoading} />
+
+        {/* Information Box */}
+        <Box sx={{ mt: 4, p: 2, backgroundColor: '#f5f5f5', borderRadius: 1 }}>
+          <Typography variant="body2" color="textSecondary">
+            <strong>Note:</strong> These rates are used to calculate your on-call compensation.
+            Changes will be applied to new calculations immediately. Weekday rates apply
+            Monday–Thursday, and weekend rates apply Friday–Sunday.
+          </Typography>
+        </Box>
+      </Container>
+      <Footer />
+    </>
   );
 }

@@ -52,14 +52,20 @@ describe('Header', () => {
     expect(screen.getByText('Schedules')).toBeInTheDocument();
   });
 
-  it('should show Settings link when authenticated', () => {
+  it('should show Settings in user menu when authenticated', () => {
     mockUseSession(makeSession());
 
     render(<Header />);
-    expect(screen.getByText('Settings')).toBeInTheDocument();
+
+    // Open the user menu
+    const accountButton = screen.getByLabelText(/account menu/i);
+    fireEvent.click(accountButton);
+
+    // Settings should be in the dropdown menu as a link
+    expect(screen.getByRole('link', { name: /settings/i })).toBeInTheDocument();
   });
 
-  it('should not show Schedules or Settings links when not authenticated', () => {
+  it('should not show Schedules when not authenticated', () => {
     (useSession as jest.Mock).mockReturnValue({
       data: null,
       status: 'unauthenticated',
@@ -67,7 +73,6 @@ describe('Header', () => {
 
     render(<Header />);
     expect(screen.queryByText('Schedules')).not.toBeInTheDocument();
-    expect(screen.queryByText('Settings')).not.toBeInTheDocument();
   });
 
   it('should toggle theme when dark mode button is clicked', () => {
