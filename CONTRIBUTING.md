@@ -287,160 +287,37 @@ Add screenshots or GIFs
 3. Once approved, a maintainer will merge your PR
 4. Your contribution will be included in the next release
 
-## 🧪 Testing Guidelines
+## 🧪 Testing
 
-### Unit Tests
+Before submitting a PR:
 
-- Test individual functions and components
-- Mock external dependencies
-- Aim for 80%+ code coverage
-- Use descriptive test names
+1. **Run unit tests**: `npm test`
+2. **Run E2E tests**: `npm run test:e2e:seeded` (faster for development)
+3. **Check coverage**: `npm run test:coverage` (target >80%)
 
-Example:
+For comprehensive testing guidance, see [docs/testing.md](docs/testing.md), which covers:
 
-```typescript
-describe('calculatePayment', () => {
-  it('should calculate correct payment for weekday shifts', () => {
-    const result = calculatePayment(weekdayShift);
-    expect(result).toBe(50);
-  });
+- How to run specific tests (unit, E2E, seeded, unauth)
+- Writing effective tests (TDD approach, pragmatic coverage)
+- Test structure and organization
+- Debugging slow tests and timeouts
 
-  it('should calculate correct payment for weekend shifts', () => {
-    const result = calculatePayment(weekendShift);
-    expect(result).toBe(75);
-  });
-});
-```
-
-### Testing the Schedule Detail Page
-
-The Schedule Detail Page (`src/app/schedules/[id]/`) is structured with modular components and hooks. When testing changes:
-
-#### Test Custom Hooks
-
-Located in `src/app/schedules/[id]/hooks/__tests__/`:
-
-- Test state initialization
-- Test state changes from callbacks
-- Verify memoization with `renderHook` from `@testing-library/react`
-
-Example:
-
-```typescript
-import { renderHook, act } from '@testing-library/react';
-import { useDateRangeNavigation } from '../useDateRangeNavigation';
-
-it('navigates to next month', () => {
-  const { result } = renderHook(() => useDateRangeNavigation());
-
-  act(() => {
-    result.current.handleNextMonth();
-  });
-
-  expect(result.current.currentMonthDisplay).toBeTruthy();
-});
-```
-
-#### Test Components
-
-Located in `src/app/schedules/[id]/components/__tests__/`:
-
-- Test with relevant props
-- Verify rendering and user interactions
-- Mock child components as needed
-
-Example:
-
-```typescript
-import { render, screen } from '@testing-library/react';
-import ScheduleHeader from '../ScheduleHeader';
-
-it('renders schedule name', () => {
-  render(
-    <ScheduleHeader
-      scheduleName="Engineering On-Call"
-      timeZone="UTC"
-      onBack={jest.fn()}
-    />
-  );
-
-  expect(screen.getByText('Engineering On-Call')).toBeInTheDocument();
-});
-```
-
-#### Test Data Fetchers
-
-Located in `src/lib/api/__tests__/`:
-
-- Test successful API responses
-- Test error handling
-- Mock `fetch` with `jest.fn()`
-- Test authentication header handling
-
-### Integration Tests
-
-- Test component interactions
-- Test API integrations
-- Use React Testing Library
-
-### E2E Tests
-
-- Test critical user flows
-- Use Playwright
-- Focus on happy paths and edge cases
-
-#### Running Seeded E2E (Authenticated)
-
-Run E2E tests with a pre-seeded NextAuth session (no login required):
+### Quick Test Commands
 
 ```bash
-npm run test:e2e:seeded          # Run all seeded projects
-npm run test:e2e:seeded:ui       # Interactive UI mode
-./scripts/e2e-seeded.sh          # Shell script wrapper
+npm test                      # All unit tests
+npm run test:watch           # Watch mode
+npm run test:e2e:seeded      # E2E authenticated tests (3 browsers)
+npm run test:e2e:seeded -- --project="chromium (seeded)"  # Single browser (faster)
+npm run test:e2e:unauth      # E2E login/redirect tests
 ```
 
-Seeded mode:
+### Test Requirements for PRs
 
-- Sets `ENABLE_TEST_SESSION_SEED=true` and injects a valid NextAuth JWT session.
-- Tests authenticated flows: protected routes, avatar menu, schedule detail pages.
-- Covers: auth state, navigation, calendar view, pagination stability.
-- Uses `NEXTAUTH_SECRET=dev-e2e-secret` by default (override via env).
-
-#### Running Unauth E2E (Login/Redirect)
-
-Run E2E tests that validate login flows and unauthenticated redirects:
-
-```bash
-npm run test:e2e:unauth          # Run all unauth projects
-npm run test:e2e:unauth:ui       # Interactive UI mode
-./scripts/e2e-unauth.sh          # Shell script wrapper
-```
-
-Unauth mode:
-
-- Sets `ENABLE_TEST_SESSION_SEED=false`, no session injected.
-- Tests unauthenticated flows: login page, OAuth buttons, redirects.
-- Skips authenticated-only suites (e.g., calendar view, session persistence).
-
-#### CI/CD
-
-GitHub Actions runs both seeded and unauth suites automatically:
-
-- **Seeded job**: Uses `NEXTAUTH_SECRET` from repository secrets.
-- **Unauth job**: Validates login/redirect behavior.
-- Both upload Playwright reports as artifacts.
-
-See `.github/workflows/e2e.yml` for configuration.
-
-### Running Tests
-
-```bash
-npm test                    # Run unit tests
-npm run test:watch         # Run tests in watch mode
-npm run test:coverage      # Generate coverage report
-npm run test:e2e          # Run all E2E tests (seeded + unauth)
-npm run test:e2e:ui       # Run E2E tests with UI
-```
+- ✅ Unit tests added for new logic
+- ✅ All existing tests passing
+- ✅ No console.logs or debug code
+- ✅ New components/functions have >80% coverage
 
 ## 🧰 Testing Utilities
 
