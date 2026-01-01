@@ -1,93 +1,10 @@
 # Test Issues & Gaps
 
-Comprehensive list of testing issues, gaps, and improvements needed for CalOohPay Web.
+**This document has been consolidated into [docs/testing.md](docs/testing.md#known-test-issues--gaps).**
 
-**Last Updated**: December 26, 2025  
-**Current Test Count**: 122 passing (10 test suites), 75 E2E passing  
-**Current Coverage**: ~60%  
-**Target Coverage**: 85%+
+For comprehensive information on testing, including known issues, coverage gaps, and recommendations, please refer to the main [Testing Guide](docs/testing.md).
 
----
-
-## ✅ RECENTLY FIXED
-
-### NextAuth Route Handler - Zero Coverage
-
-**Status**: ✅ FIXED  
-**Date**: December 26, 2025
-
-**Previous Issue**:
-Core authentication endpoint at `src/app/api/auth/[...nextauth]/route.ts` had 0% test coverage. This is a critical passthrough to NextAuth that needed verification of proper configuration.
-
-**Impact**:
-
-- Authentication failures could break the entire app
-- NextAuth misconfiguration would go undetected
-- No verification that authOptions were properly exported
-
-**Fix Applied**:
-Created comprehensive test suite at `src/app/api/auth/[...nextauth]/__tests__/route.test.ts` with 9 tests covering:
-
-- NextAuth initialization with authOptions
-- Handler configuration and Next.js App Router compatibility
-- GET and POST handler exports and signatures
-- Integration with OAuth and Credentials providers
-- Error handling and environment variable management
-
-**Result**: Achieved 100% code coverage (statements, branches, functions, lines) for the NextAuth route handler.
-
----
-
-### Console Error Tests - Hydration Warnings
-
-**Status**: ✅ FIXED  
-**Date**: December 25, 2025
-
-**Previous Issue**:
-E2E console error tests were failing across all browsers due to overly strict filtering:
-
-- [chromium] should load schedules page without console errors (when authenticated)
-- [webkit] should load home page without console errors or warnings
-- [Mobile Chrome] should load home page without console errors or warnings
-- [Mobile Safari] should load login page without console errors or warnings
-
-**Root Cause**:
-
-- React hydration warnings from MUI Emotion CSS-in-JS (server/client mismatch)
-- NextAuth debug warnings in development mode
-- Tests only filtered DevTools warnings
-
-**Fix Applied**:
-Enhanced `isAcceptableMessage()` filter in `tests/e2e/console.spec.ts` to exclude:
-
-- Hydration warnings (handled by React, regenerated)
-- MUI Emotion styling warnings (`css-global`, `data-emotion`)
-- NextAuth debug warnings (`next-auth`, `DEBUG_ENABLED`)
-- DevTools warnings
-
-**Result**: All 25 console error tests now pass across all browsers.
-
----
-
-## 🔴 CRITICAL PRIORITY
-
-### 1. Zero Coverage - Individual Schedule API Route
-
-**File**: `src/app/api/schedules/[id]/route.ts`  
-**Coverage**: 0%  
-**Lines**: 1-108
-
-**Issue**: Critical API endpoint for fetching schedule details with time ranges has no tests.
-
-**Impact**:
-
-- Schedule detail page could fail silently
-- Date range filtering (since/until params) untested
-- 404 handling for non-existent schedules unchecked
-- Auth checking not verified
-
-**Suggested Fix**:
-Create `src/app/api/schedules/[id]/__tests__/route.test.ts`:
+This file is maintained for historical reference. All future test-related documentation should be added to [docs/testing.md](docs/testing.md).
 
 ```typescript
 describe('GET /api/schedules/[id]', () => {

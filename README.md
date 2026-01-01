@@ -141,22 +141,21 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🧪 Testing
 
-### Run Unit Tests
+See [docs/testing.md](./docs/testing.md) for comprehensive testing guidance, including:
+
+- How to run unit, E2E, seeded, and unauth tests
+- Test structure and best practices
+- Performance tips for debugging slow tests
+- Known test issues and gaps
+
+Quick commands:
 
 ```bash
-npm test
-```
-
-### Run E2E Tests
-
-```bash
-npm run test:e2e
-```
-
-### Run Tests with Coverage
-
-```bash
-npm run test:coverage
+npm test                      # Run all unit tests
+npm run test:watch           # Run tests in watch mode
+npm run test:coverage        # Generate coverage report
+npm run test:e2e:seeded      # Run E2E tests (pre-authenticated)
+npm run test:e2e:unauth      # Run E2E tests (login flows)
 ```
 
 ## 🏗️ Project Structure

@@ -769,3 +769,70 @@ open coverage/lcov-report/index.html
 - [Architecture](./architecture.md) - System architecture
 - [Search Architecture](./search-architecture.md) - Progressive search details
 - [Styling Architecture](./styling-architecture.md) - Component styling patterns
+
+## Calendar View Testing Guide
+
+The Calendar View feature provides an interactive monthly calendar for viewing on-call schedules with payment calculations.
+
+### Testing the Calendar View
+
+1. **Start the development server**:
+
+   ```bash
+   npm run dev
+   ```
+
+2. **Navigate to a schedule**:
+   - Log in at http://localhost:3000/login
+   - Go to Schedules page
+   - Click on any schedule to view details
+
+3. **Switch to Calendar View**:
+   - On the schedule detail page, toggle to "Calendar View"
+   - View interactive monthly calendar of on-call events
+   - Click events to see payment breakdown details
+
+### What to Test
+
+- **View switching**: Toggle between List and Calendar views
+- **Month navigation**: Previous/Next buttons work in both views
+- **Event display**: Events appear on correct dates with user names
+- **Event details**: Clicking events shows accurate payment calculations
+- **Responsive design**: Works on mobile, tablet, and desktop
+- **Dark mode**: Theme toggle preserves calendar view
+
+### Test Coverage Status
+
+- **Unit Tests**: 24 tests for calendar utilities (100% passing)
+- **Component Tests**: Tests for CalendarView component
+- **E2E Tests**: Playwright tests for calendar navigation and events
+- **Type Safety**: Full TypeScript coverage
+- **Build**: Production builds successfully
+
+## Known Test Issues & Gaps
+
+### Recently Fixed
+
+#### NextAuth Route Handler Coverage (✅ FIXED)
+
+- **Issue**: `src/app/api/auth/[...nextauth]/route.ts` had 0% test coverage
+- **Fix**: Created 9 comprehensive tests achieving 100% code coverage
+- **Tests**: Verify NextAuth initialization, OAuth/Credentials integration, error handling
+
+#### Console Error Tests - Hydration Warnings (✅ FIXED)
+
+- **Issue**: E2E console tests failing due to React hydration warnings from MUI Emotion
+- **Fix**: Enhanced console message filtering to exclude acceptable warnings
+- **Result**: All 25 console error tests now pass across browsers
+
+### Open Issues & Recommendations
+
+For a complete list of known test gaps and recommendations, see [TEST_ISSUES.md](../TEST_ISSUES.md).
+
+**Critical gaps include**:
+
+- Schedule detail API route (`/api/schedules/[id]`) - 0% coverage
+- Individual schedule page API integration tests
+- More E2E tests for payment calculation flows
+
+**To contribute**: Open a test file in `__tests__/` directory next to the code being tested, or add to existing test suites. Reference the [Contributing Guide](../CONTRIBUTING.md) for testing standards.

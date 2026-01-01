@@ -117,11 +117,15 @@ npm run format           # Format all code with Prettier
 npm run type-check       # Check TypeScript types
 
 # Testing
+
+See [docs/testing.md](docs/testing.md) for comprehensive testing guidance.
+
+Quick commands:
 npm test                 # Run unit tests
 npm run test:watch       # Run tests in watch mode
 npm run test:coverage    # Generate coverage report
-npm run test:e2e         # Run E2E tests
-npm run test:e2e:ui      # Run E2E tests with UI
+npm run test:e2e:seeded  # Run E2E tests (pre-authenticated)
+npm run test:e2e:unauth  # Run E2E tests (login flows)
 ```
 
 ## Project Structure at a Glance
