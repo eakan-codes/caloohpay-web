@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Container, Box, Typography, Alert, CircularProgress } from '@mui/material';
 import { Header, Footer } from '@/components/common';
 import { SettingsForm, type SettingsFormData } from '@/components/settings';
@@ -20,6 +20,16 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const successTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Handle form submission
   const handleSubmit = useCallback(async (data: SettingsFormData) => {
@@ -34,8 +44,13 @@ export default function SettingsPage() {
       // Show success message
       setShowSuccess(true);
 
+      // Clear any existing timeout
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+
       // Hide success message after 3 seconds
-      setTimeout(() => {
+      successTimeoutRef.current = setTimeout(() => {
         setShowSuccess(false);
       }, 3000);
     } catch (err) {
