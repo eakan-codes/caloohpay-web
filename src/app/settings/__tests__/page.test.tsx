@@ -123,7 +123,8 @@ describe('SettingsPage', () => {
 
       // Make a change
       await user.click(weekdayInput);
-      await user.keyboard('{Control>}a{/Control}60');
+      await user.keyboard('{Control>}a{/Control}'); // Select all
+      await user.keyboard('60');
 
       // Click save
       await user.click(saveButton);
