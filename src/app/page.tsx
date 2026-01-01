@@ -102,8 +102,8 @@ export default function Home() {
                     Smart Calculations
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Automatic calculation of OOH compensation. £50 per weekday, £75 per weekend.
-                    Auditable and transparent.
+                    Automatic calculation of OOH compensation with customizable rates. Default: £50
+                    per weekday, £75 per weekend. Auditable and transparent.
                   </Typography>
                 </Paper>
 
