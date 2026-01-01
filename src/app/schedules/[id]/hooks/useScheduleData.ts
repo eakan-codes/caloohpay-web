@@ -7,6 +7,7 @@ import { OnCallPeriod, OnCallUser, OnCallPaymentsCalculator } from '@/lib/calooh
 import { scheduleDetailFetcher, type ScheduleResponse } from '@/lib/api/fetchers';
 import type { User, ScheduleEntry } from '@/lib/types';
 import type { UserSchedule } from '@/app/schedules/[id]/components/OnCallSchedule.types';
+import { getCurrentRates } from '@/lib/utils/ratesUtils';
 
 /**
  * Hook for fetching and processing schedule data from the API
@@ -90,8 +91,9 @@ export const useScheduleData = (
           new OnCallPeriod(new Date(entry.start), new Date(entry.end), data.schedule.time_zone)
       );
 
-      // Calculate details for each entry
-      const calculator = new OnCallPaymentsCalculator();
+      // Calculate details for each entry with user-customized rates
+      const rates = getCurrentRates();
+      const calculator = new OnCallPaymentsCalculator(rates.weekdayRate, rates.weekendRate);
       const entriesWithCompensation = sortedEntries.map((entry, index) => {
         const start = DateTime.fromISO(
           typeof entry.start === 'string' ? entry.start : entry.start.toISOString()

@@ -11,6 +11,13 @@ import {
 } from '@/lib/utils/calendarUtils';
 import type { ScheduleEntry, User } from '@/lib/types';
 import { PAYMENT_RATES } from '@/lib/constants';
+import * as ratesUtils from '@/lib/utils/ratesUtils';
+
+// Mock the ratesUtils module
+jest.mock('@/lib/utils/ratesUtils', () => ({
+  getCurrentRates: jest.fn(),
+  getDefaultRates: jest.fn(),
+}));
 
 describe('calendarUtils', () => {
   const mockUser: User = {
@@ -28,6 +35,15 @@ describe('calendarUtils', () => {
   };
 
   const timezone = 'America/New_York';
+
+  beforeEach(() => {
+    // Reset mocks and set default return values
+    jest.clearAllMocks();
+    (ratesUtils.getCurrentRates as jest.Mock).mockReturnValue({
+      weekdayRate: PAYMENT_RATES.WEEKDAY,
+      weekendRate: PAYMENT_RATES.WEEKEND,
+    });
+  });
 
   describe('transformToCalendarEvents', () => {
     it('should transform schedule entries into calendar events', () => {

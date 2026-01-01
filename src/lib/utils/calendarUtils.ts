@@ -7,6 +7,7 @@ import { OnCallPeriod, OnCallUser, OnCallPaymentsCalculator } from '@/lib/calooh
 import type { ScheduleEntry, User } from '@/lib/types';
 import he from 'he';
 import { sanitizeUrl } from './urlSanitization';
+import { getCurrentRates } from './ratesUtils';
 
 /**
  * Extended calendar event with payment details
@@ -78,8 +79,9 @@ export function transformToCalendarEvents(
   if (!Array.isArray(entries)) {
     throw new Error('Entries must be an array');
   }
-  // Calculate payments using caloohpay, instantiate calculator once
-  const calculator = new OnCallPaymentsCalculator();
+  // Calculate payments using caloohpay with user-customized rates
+  const rates = getCurrentRates();
+  const calculator = new OnCallPaymentsCalculator(rates.weekdayRate, rates.weekendRate);
 
   return entries
     .filter((entry) => {

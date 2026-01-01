@@ -148,6 +148,21 @@ npm run type-check       # TypeScript validation (no emit)
 - Format: Date, User, Schedule, Weekday Hours, Weekend Hours, Total Payment
 - Compatible with Google Sheets and Excel
 
+### Payment Calculations
+
+- **Centralized Rate Management**: [src/lib/utils/ratesUtils.ts](src/lib/utils/ratesUtils.ts)
+  - Use `getCurrentRates()` to get user-customized rates from settings store
+  - Use `getDefaultRates()` for displaying default values in UI
+  - Never hardcode payment rates or access PAYMENT_RATES directly in calculations
+- **Calculator Integration**: Pass rates to OnCallPaymentsCalculator constructor
+  ```typescript
+  import { getCurrentRates } from '@/lib/utils/ratesUtils';
+  const rates = getCurrentRates();
+  const calculator = new OnCallPaymentsCalculator(rates.weekdayRate, rates.weekendRate);
+  ```
+- **Rate Customization**: Users can override default rates (£50/£75) in Settings page
+- **Store Persistence**: Custom rates persist in localStorage across sessions
+
 ## Performance Patterns
 
 ### Memoization Strategy
@@ -202,7 +217,9 @@ npm run type-check       # TypeScript validation (no emit)
 
 - **DO NOT modify** - payment logic lives in `caloohpay` npm package
 - To change rates/rules: Update the upstream package, then `npm update caloohpay`
-- Constants (rates, hours) in [src/lib/constants.ts](src/lib/constants.ts) are for display only
+- **User-customizable rates**: Retrieved via `getCurrentRates()` from [src/lib/utils/ratesUtils.ts](src/lib/utils/ratesUtils.ts)
+- **Default rates**: Constants in [src/lib/constants.ts](src/lib/constants.ts) for display only
+- **Adding calculations**: Always use `getCurrentRates()` and pass to OnCallPaymentsCalculator
 
 ## Deployment
 
