@@ -12,8 +12,8 @@ if [[ "$@" == *"--project"* ]]; then
   # User provided custom projects, use them as-is
   npx playwright test "$@"
 elif [[ "$@" == *"--ui"* ]]; then
-  # UI mode with default unauth projects
-  npx playwright test --ui "${PROJECTS[@]}" "$@"
+  # UI mode with default unauth projects (exclude --ui from "$@" to avoid duplication)
+  npx playwright test --ui "${PROJECTS[@]}" "${@//--ui/}"
 else
   # Standard run with default unauth projects
   npx playwright test "${PROJECTS[@]}" "$@"

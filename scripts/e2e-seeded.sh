@@ -13,8 +13,8 @@ if [[ "$@" == *"--project"* ]]; then
   # User provided custom projects, use them as-is
   npx playwright test "$@"
 elif [[ "$@" == *"--ui"* ]]; then
-  # UI mode with default seeded projects
-  npx playwright test --ui "${PROJECTS[@]}" "$@"
+  # UI mode with default seeded projects (exclude --ui from "$@" to avoid duplication)
+  npx playwright test --ui "${PROJECTS[@]}" "${@//--ui/}"
 else
   # Standard run with default seeded projects
   npx playwright test "${PROJECTS[@]}" "$@"
