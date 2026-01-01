@@ -120,8 +120,12 @@ test.describe('Settings Page', () => {
     // Move to another field to finalize the blur
     await page.getByLabel(/weekend rate/i).focus();
 
-    // Wait a moment for validation to process
-    await page.waitForTimeout(500);
+    // Wait for validation error to appear in the DOM
+    await page
+      .waitForSelector('text=/rate must be between 25 and 200/i', { timeout: 3000 })
+      .catch(() => {
+        // If error doesn't appear, that's okay - we'll check in the assertion below
+      });
 
     // Try to submit with invalid value
     await saveButton.click();
