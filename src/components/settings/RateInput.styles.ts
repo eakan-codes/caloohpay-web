@@ -28,11 +28,11 @@ export const inputStyles: Record<string, SxProps<Theme>> = {
       fontWeight: 500,
       textAlign: 'right',
       '&::-webkit-outer-spin-button, &::-webkit-inner-spin-button': {
-        '-webkit-appearance': 'none',
+        WebkitAppearance: 'none',
         margin: 0,
       },
       '&[type=number]': {
-        '-moz-appearance': 'textfield',
+        MozAppearance: 'textfield',
       },
     },
     '& .MuiInputBase-input:disabled': {

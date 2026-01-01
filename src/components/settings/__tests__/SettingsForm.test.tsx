@@ -106,6 +106,33 @@ describe('SettingsForm', () => {
   });
 
   describe('reset to defaults', () => {
+    it('should restore default values (£50/£75) when Restore Defaults is clicked', async () => {
+      const user = userEvent.setup();
+      const props: SettingsFormProps = {
+        initialValues: { weekdayRate: 100, weekendRate: 150 },
+        onSubmit: mockOnSubmit,
+      };
+
+      render(<SettingsForm {...props} />);
+
+      // Verify initial custom values
+      expect(screen.getByDisplayValue('100')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('150')).toBeInTheDocument();
+
+      // Click Restore Defaults
+      const resetButton = screen.getByRole('button', { name: /restore defaults/i });
+      await user.click(resetButton);
+
+      // Should restore to default constants (£50/£75), not initialValues
+      await waitFor(() => {
+        expect(screen.getByDisplayValue('50')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('75')).toBeInTheDocument();
+      });
+
+      // Should not trigger form submission
+      expect(mockOnSubmit).not.toHaveBeenCalled();
+    });
+
     it('should have restore defaults button that is clickable', async () => {
       const user = userEvent.setup();
       const props: SettingsFormProps = {

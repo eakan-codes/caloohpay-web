@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Box, Button, CircularProgress } from '@mui/material';
 import { RateInput } from './RateInput';
+import { PAYMENT_RATES } from '@/lib/constants';
 import * as styles from './SettingsForm.styles';
 
 // Zod validation schema
@@ -57,9 +58,9 @@ export const SettingsForm = React.memo(
     );
 
     const handleReset = useCallback(() => {
-      setValue('weekdayRate', initialValues.weekdayRate);
-      setValue('weekendRate', initialValues.weekendRate);
-    }, [setValue, initialValues]);
+      setValue('weekdayRate', PAYMENT_RATES.WEEKDAY);
+      setValue('weekendRate', PAYMENT_RATES.WEEKEND);
+    }, [setValue]);
 
     const handleCancel = useCallback(() => {
       setValue('weekdayRate', initialValues.weekdayRate);

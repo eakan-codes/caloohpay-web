@@ -118,15 +118,18 @@ test.describe('Settings Page', () => {
     await saveButton.click();
 
     // Should show validation error (React Hook Form validation)
-    await expect(page.getByText(/must be at least 25/i)).toBeVisible({ timeout: 2000 });
+    await expect(page.getByText(/rate must be between 25 and 200/i)).toBeVisible({ timeout: 2000 });
   });
 
   test('should be accessible from header navigation', async ({ page }) => {
     // Start from home
     await page.goto('/');
 
-    // Click Settings link in header
-    await page.getByRole('link', { name: /settings/i }).click();
+    // Open user menu (avatar button)
+    await page.getByRole('button', { name: /account menu/i }).click();
+
+    // Click Settings link in dropdown
+    await page.getByRole('menuitem', { name: /settings/i }).click();
 
     // Should navigate to settings page
     await expect(page).toHaveURL('/settings');
