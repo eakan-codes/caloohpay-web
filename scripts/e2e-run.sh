@@ -2,6 +2,10 @@
 set -euo pipefail
 
 # Shared E2E test runner - called by both seeded and unauth scripts
+# 
+# Requirements:
+#   - Bash 3.0+ (uses array syntax and [[ ]] conditionals)
+#
 # Usage: e2e-run.sh <seed-mode> <project1> <project2> <project3> [additional-args...]
 #   seed-mode: "true" for seeded tests, "false" for unauth tests
 #   projects: three default project flags to use
