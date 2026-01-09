@@ -104,7 +104,7 @@ export const getSettingsStore = create<SettingsState>((set, get) => {
       return true;
     },
 
-    getDefaults: () => DEFAULTS,
+    getDefaults: () => ({ ...DEFAULTS }),
 
     reset: () => {
       persistToStorage(DEFAULTS);

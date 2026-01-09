@@ -64,18 +64,25 @@ test.describe('Settings Page', () => {
 
   test('should reset values when cancel is clicked', async ({ page }) => {
     const weekdayInput = page.getByLabel(/weekday rate/i);
+    const weekendInput = page.getByLabel(/weekend rate/i);
     const cancelButton = page.getByRole('button', { name: /cancel/i });
 
-    // Change value
+    // Change weekday value
     await weekdayInput.click();
     await weekdayInput.fill('');
     await weekdayInput.fill('60');
 
+    // Change weekend value
+    await weekendInput.click();
+    await weekendInput.fill('');
+    await weekendInput.fill('90');
+
     // Click cancel
     await cancelButton.click();
 
-    // Value should reset to original
+    // Both values should reset to original
     await expect(weekdayInput).toHaveValue('50');
+    await expect(weekendInput).toHaveValue('75');
   });
 
   test('should restore default values when restore defaults is clicked', async ({ page }) => {
@@ -120,24 +127,13 @@ test.describe('Settings Page', () => {
     // Move to another field to finalize the blur
     await page.getByLabel(/weekend rate/i).focus();
 
-    // Wait for validation error to appear in the DOM
-    await page
-      .waitForSelector('text=/rate must be between 25 and 200/i', { timeout: 3000 })
-      .catch(() => {
-        // If error doesn't appear, that's okay - we'll check in the assertion below
-      });
-
     // Try to submit with invalid value
     await saveButton.click();
 
-    // The form should not submit or should show validation error
-    // Either the error message appears or the input shows error state
-    const errorMessage = page.getByText(/rate must be between 25 and 200/i);
-    const pageStillOnSettings = await page.url().includes('/settings');
-
-    // Verify either error is visible or we're still on the page (form didn't submit)
-    const hasError = await errorMessage.isVisible().catch(() => false);
-    expect(hasError || pageStillOnSettings).toBe(true);
+    // Verify validation error is visible
+    await expect(page.getByText(/rate must be between 25 and 200/i).first()).toBeVisible({
+      timeout: 3000,
+    });
   });
 
   test('should be accessible from header navigation', async ({ page }) => {

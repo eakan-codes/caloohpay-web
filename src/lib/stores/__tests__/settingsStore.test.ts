@@ -248,6 +248,22 @@ describe('settingsStore', () => {
         weekendRate: 75,
       });
     });
+
+    it('should return a new object on each call to prevent mutations', () => {
+      const defaults1 = getSettingsStore.getState().getDefaults();
+      const defaults2 = getSettingsStore.getState().getDefaults();
+
+      // Should return equal values
+      expect(defaults1).toEqual(defaults2);
+
+      // But should be different object references to prevent external mutations
+      expect(defaults1).not.toBe(defaults2);
+
+      // Modifying one should not affect the other
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (defaults1 as any).weekdayRate = 999;
+      expect(defaults2.weekdayRate).toBe(50);
+    });
   });
 
   describe('store subscriptions', () => {

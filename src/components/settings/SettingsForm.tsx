@@ -58,18 +58,16 @@ export const SettingsForm = React.memo(
 
     const handleWeekdayChange = useCallback(
       (value: number | '') => {
-        if (value !== '') {
-          setValue('weekdayRate', value, { shouldValidate: true });
-        }
+        // Allow empty value to trigger validation - convert to 0 which will fail min validation
+        setValue('weekdayRate', value === '' ? 0 : value, { shouldValidate: true });
       },
       [setValue]
     );
 
     const handleWeekendChange = useCallback(
       (value: number | '') => {
-        if (value !== '') {
-          setValue('weekendRate', value, { shouldValidate: true });
-        }
+        // Allow empty value to trigger validation - convert to 0 which will fail min validation
+        setValue('weekendRate', value === '' ? 0 : value, { shouldValidate: true });
       },
       [setValue]
     );
