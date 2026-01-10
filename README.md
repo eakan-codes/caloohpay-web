@@ -15,7 +15,8 @@ A modern web application that automates the calculation of out-of-hours (OOH) on
   - **List View**: Detailed breakdown of on-call periods by user
   - **Calendar View**: Interactive monthly calendar with FullCalendar integration
 - 💰 **Payment Calculation** - Uses the official [caloohpay](https://www.npmjs.com/package/caloohpay) package for accurate out-of-hours compensation
-- 📊 **Export Capabilities** - Generate CSV reports for payroll processing
+- � **Multi-Schedule Reports** - Calculate compensation across multiple schedules with overlap detection
+- �📊 **Export Capabilities** - Generate CSV reports for payroll processing
 - 🎨 **Modern UI** - Built with Material-UI and Tailwind CSS
 - 🔒 **Type Safety** - Full TypeScript implementation
 - ♿ **Accessible** - WCAG compliant with keyboard navigation support

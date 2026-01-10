@@ -91,6 +91,7 @@ export const ROUTES = {
   LOGIN: '/login',
   DASHBOARD: '/dashboard',
   SCHEDULES: '/schedules',
+  SCHEDULE_MULTI_GRID: '/schedules/payment-grid',
   SCHEDULE_DETAIL: (id: string) => `/schedules/${id}`,
   PAYMENTS: '/payments',
   SETTINGS: '/settings',

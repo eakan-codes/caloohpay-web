@@ -4,6 +4,8 @@
 
 CalOohPay automates out-of-hours (OOH) on-call compensation calculations for PagerDuty schedules. Built with Next.js 14 (App Router), TypeScript, Material-UI, and NextAuth.js. The core payment calculation logic uses the official [caloohpay npm package](https://www.npmjs.com/package/caloohpay).
 
+**Current Branch**: `feat/multi-sched-payment-calculator` - Adding multi-schedule grid view for admin-level compensation reporting across multiple schedules. See [product-specs/multi-schedule-payment-calculation.md](product-specs/multi-schedule-payment-calculation.md) for feature requirements.
+
 ## Architecture & Key Patterns
 
 ### Dual Authentication System
@@ -80,11 +82,16 @@ npm run type-check       # TypeScript validation (no emit)
 - **Unit tests**: Jest + React Testing Library ([tests/unit/](tests/unit/))
   - Run: `npm test` or `npm run test:watch`
   - Coverage: `npm run test:coverage` (target >80%)
+  - 226+ tests across 15+ test suites (96.5% unit, 3.5% E2E)
 - **E2E tests**: Playwright with chromium, firefox, webkit ([tests/e2e/](tests/e2e/))
-  - Run: `npm run test:e2e` (auto-starts dev server)
-  - Debug: `npm run test:e2e:ui` (interactive mode)
+  - **Seeded tests** (authenticated): `npm run test:e2e:seeded` - Uses pre-seeded NextAuth JWT session
+  - **Unauth tests**: `npm run test:e2e:unauth` - Tests unauthenticated flows
+  - **Regular E2E**: `npm run test:e2e` - Standard E2E without session seeding
+  - Debug: `npm run test:e2e:ui` or `npm run test:e2e:seeded:ui` (interactive mode)
+  - Report: `npm run test:e2e:report` - View HTML test report
 - **Test structure**: Mirror `src/` structure in `tests/unit/`
 - Mock PagerDuty API calls in tests - never use real credentials
+- **Seeded E2E pattern**: Uses `tests/e2e/.auth/seed.ts` to create JWT sessions for authenticated tests
 
 ### Code Quality
 
@@ -190,12 +197,17 @@ npm run type-check       # TypeScript validation (no emit)
 - Use `test.describe.serial()` for sequential tests
 - Mock time with `page.clock.install()` for date-dependent tests
 - CI runs single worker - local runs parallel
+- **Seeded tests**: Use `npm run test:e2e:seeded` when testing authenticated flows
+  - Session seed created in `tests/e2e/.auth/seed.ts`
+  - Uses JWT strategy to bypass OAuth during tests
+  - Seed scripts in `scripts/` directory (`e2e-seeded.sh`, `e2e-unauth.sh`)
 
 ### Jest Configuration
 
 - Transform ES modules: `transformIgnorePatterns` includes `jose`, `openid-client`, `next-auth`
 - Silent mode enabled - use `console.log` for debugging (will still show)
 - Coverage excludes `*.d.ts`, `*.stories.*`, `__tests__/`
+- Path aliases: `@/*` resolves to `src/*` (configured in [jest.config.ts](jest.config.ts))
 
 ## Common Tasks
 
@@ -220,6 +232,40 @@ npm run type-check       # TypeScript validation (no emit)
 - **User-customizable rates**: Retrieved via `getCurrentRates()` from [src/lib/utils/ratesUtils.ts](src/lib/utils/ratesUtils.ts)
 - **Default rates**: Constants in [src/lib/constants.ts](src/lib/constants.ts) for display only
 - **Adding calculations**: Always use `getCurrentRates()` and pass to OnCallPaymentsCalculator
+
+## Current Feature Development
+
+### Multi-Schedule Payment Calculation (feat/multi-sched-payment-calculator)
+
+**Status**: In progress - See [product-specs/multi-schedule-payment-calculation.md](product-specs/multi-schedule-payment-calculation.md)
+
+**Purpose**: Enable admins to view compensation reports across multiple schedules simultaneously in a spreadsheet-like grid view.
+
+**Key Requirements**:
+
+- Multi-select schedules from search interface
+- Display compensation data in two-table format per schedule:
+  1. Metadata table: Schedule name, URL, timezone
+  2. Compensation table: Employee, Total, Weekdays, Weekends
+- Handle overlapping schedules: If an employee is on-call for multiple schedules during same period, pay only once for total duration
+- Month navigation for period selection (full month, beginning to end)
+- Persistent schedule selection in localStorage
+- Export grid data to clipboard for pasting into spreadsheets
+- Performance: Support 100+ schedules without sluggishness
+
+**Non-functional Requirements**:
+
+- Use lightweight, fast grid library
+- Smooth scrolling for large datasets
+- Responsive grid layout
+
+**Implementation Notes**:
+
+- Route: `/schedules` with multi-select capability
+- Component location: Likely `src/app/schedules/` or `src/components/schedules/`
+- State management: Zustand store for selected schedules
+- Data persistence: localStorage (future enhancement: DynamoDB)
+- Export: Copy to clipboard initially (future: direct CSV download)
 
 ## Deployment
 

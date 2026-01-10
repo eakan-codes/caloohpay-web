@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Box, Button, CircularProgress } from '@mui/material';
@@ -44,7 +44,7 @@ export const SettingsForm = React.memo(
   ({ initialValues, onSubmit, isLoading = false }: SettingsFormProps) => {
     const {
       handleSubmit,
-      watch,
+      control,
       setValue,
       formState: { errors },
     } = useForm<SettingsFormData>({
@@ -53,8 +53,8 @@ export const SettingsForm = React.memo(
       mode: 'onBlur',
     });
 
-    const weekdayRate = watch('weekdayRate');
-    const weekendRate = watch('weekendRate');
+    const weekdayRate = useWatch({ control, name: 'weekdayRate' });
+    const weekendRate = useWatch({ control, name: 'weekendRate' });
 
     const handleWeekdayChange = useCallback(
       (value: number | '') => {

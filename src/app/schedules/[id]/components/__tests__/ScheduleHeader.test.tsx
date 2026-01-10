@@ -25,7 +25,7 @@ describe('ScheduleHeader', () => {
   });
 
   it('does not render description when not provided', () => {
-    const { scheduleDescription: _, ...props } = defaultProps;
+    const props = { ...defaultProps, scheduleDescription: undefined };
     render(<ScheduleHeader {...props} />);
     expect(screen.queryByText('Primary engineering schedule')).not.toBeInTheDocument();
   });

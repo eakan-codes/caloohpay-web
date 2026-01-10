@@ -4,11 +4,12 @@
 
 import axios, { AxiosInstance } from 'axios';
 import type { PagerDutySchedule } from '@/lib/types';
+import { getPagerDutyAuthHeader } from '@/lib/utils/pagerdutyAuth';
 
 export class PagerDutyClient {
   private client: AxiosInstance;
 
-  constructor(apiToken: string) {
+  constructor(apiToken: string, authMethod?: 'oauth' | 'api-token') {
     // Use environment variable for timeout, default to 30 seconds
     const timeout = parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000', 10) || 30000;
 
@@ -16,7 +17,7 @@ export class PagerDutyClient {
       baseURL: 'https://api.pagerduty.com',
       headers: {
         Accept: 'application/vnd.pagerduty+json;version=2',
-        Authorization: `Token token=${apiToken}`,
+        Authorization: getPagerDutyAuthHeader(apiToken, authMethod),
         'Content-Type': 'application/json',
       },
       timeout,
@@ -89,19 +90,23 @@ export class PagerDutyClient {
     until: string,
     timezone?: string
   ): Promise<PagerDutySchedule[]> {
-    const schedules: PagerDutySchedule[] = [];
+    const promises = scheduleIds.map((scheduleId) =>
+      this.getSchedule(scheduleId, since, until, timezone)
+        .then((schedule) => ({ status: 'fulfilled' as const, value: schedule }))
+        .catch((error) => {
+          console.error(`Failed to fetch schedule ${scheduleId}:`, error);
+          return { status: 'rejected' as const, reason: error };
+        })
+    );
 
-    for (const scheduleId of scheduleIds) {
-      try {
-        const schedule = await this.getSchedule(scheduleId, since, until, timezone);
-        schedules.push(schedule);
-      } catch (error) {
-        console.error(`Failed to fetch schedule ${scheduleId}:`, error);
-        // Continue with other schedules
-      }
-    }
+    const results = await Promise.all(promises);
 
-    return schedules;
+    return results
+      .filter(
+        (result): result is { status: 'fulfilled'; value: PagerDutySchedule } =>
+          result.status === 'fulfilled'
+      )
+      .map((result) => result.value);
   }
 
   /**
@@ -120,6 +125,9 @@ export class PagerDutyClient {
 /**
  * Creates a PagerDuty client instance
  */
-export function createPagerDutyClient(apiToken: string): PagerDutyClient {
-  return new PagerDutyClient(apiToken);
+export function createPagerDutyClient(
+  apiToken: string,
+  authMethod?: 'oauth' | 'api-token'
+): PagerDutyClient {
+  return new PagerDutyClient(apiToken, authMethod);
 }

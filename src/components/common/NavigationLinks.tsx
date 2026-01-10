@@ -16,8 +16,13 @@ export const NavigationLinks: React.FC<NavigationLinksProps> = ({ isAuthenticate
   }
 
   return (
-    <Button color="inherit" component={Link} href={ROUTES.SCHEDULES}>
-      Schedules
-    </Button>
+    <>
+      <Button color="inherit" component={Link} href={ROUTES.SCHEDULES}>
+        Schedules
+      </Button>
+      <Button color="inherit" component={Link} href={ROUTES.SCHEDULE_MULTI_GRID}>
+        Reports
+      </Button>
+    </>
   );
 };

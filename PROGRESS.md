@@ -641,3 +641,23 @@ Created:
 
 **Last Updated**: December 23, 2025
 **Next Session**: Environment validation, middleware creation, and unit test coverage
+
+## ✅ Completed: Feature - Multi-Schedule Payment Calculation
+
+### Date: January 10, 2026
+
+#### Features Implemented
+
+- ✅ **Multi-Schedule Payment Report**
+  - Select multiple schedules via async autocomplete search
+  - Calculate overlapping on-call payments using sweep-line algorithm to prevent double payment
+  - Split compensation fairly when user is on multiple schedules simultaneously
+  - Month-based reporting period selection
+
+- ✅ **Technical Implementation**
+  - **Algorithm**: O(N log N) sweep-line processing in `/api/reports/multi-schedule`
+  - **Frontend**: Virtualized grid (`react-virtuoso`) for performance with 100+ schedules
+  - **State**: `useSWR` for report fetching, LocalStorage persistence for selections
+  - **Testing**:
+    - Full E2E coverage for user flow (`multi-schedule.spec.ts`)
+    - Extensive Unit tests for overlap logic (`route.test.ts`)
