@@ -91,9 +91,7 @@ export class PagerDutyClient {
     timezone?: string
   ): Promise<PagerDutySchedule[]> {
     const results = await Promise.allSettled(
-      scheduleIds.map((scheduleId) =>
-        this.getSchedule(scheduleId, since, until, timezone)
-      )
+      scheduleIds.map((scheduleId) => this.getSchedule(scheduleId, since, until, timezone))
     );
 
     results.forEach((result, index) => {
@@ -104,9 +102,7 @@ export class PagerDutyClient {
 
     return results
       .filter(
-        (
-          result
-        ): result is PromiseFulfilledResult<PagerDutySchedule> =>
+        (result): result is PromiseFulfilledResult<PagerDutySchedule> =>
           result.status === 'fulfilled'
       )
       .map((result) => result.value);
@@ -122,6 +118,70 @@ export class PagerDutyClient {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Fetches on-call entries for a schedule within a date range
+   * Used for frequency matrix and burden distribution analytics
+   */
+  async getOnCalls(
+    scheduleId: string,
+    since: string,
+    until: string
+  ): Promise<import('@/lib/types').OnCallEntry[]> {
+    const params: Record<string, string> = {
+      schedule_ids: scheduleId,
+      since,
+      until,
+    };
+
+    const response = await this.client.get('/oncalls', { params });
+
+    if (!response.data || !response.data.oncalls) {
+      throw new Error('Invalid API response: Missing oncalls data');
+    }
+
+    return response.data.oncalls;
+  }
+
+  /**
+   * Fetches aggregated user analytics for burden distribution
+   * Note: This endpoint may require additional permissions
+   */
+  async getUserMetrics(since: string, until: string): Promise<unknown> {
+    const params: Record<string, string> = {
+      since,
+      until,
+    };
+
+    const response = await this.client.post('/analytics/metrics/users/all', params);
+
+    if (!response.data) {
+      throw new Error('Invalid API response: Missing user metrics data');
+    }
+
+    return response.data;
+  }
+
+  /**
+   * Fetches responder analytics including interruption data
+   * Note: This endpoint may require additional permissions
+   */
+  async getResponderMetrics(userId: string, since: string, until: string): Promise<unknown> {
+    const params: Record<string, string> = {
+      since,
+      until,
+    };
+
+    const response = await this.client.get(`/analytics/raw/responders/${userId}/incidents`, {
+      params,
+    });
+
+    if (!response.data) {
+      throw new Error('Invalid API response: Missing responder metrics data');
+    }
+
+    return response.data;
   }
 }
 

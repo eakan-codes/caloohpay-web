@@ -68,6 +68,11 @@ export const API_ENDPOINTS = {
     DETAIL: (id: string) => `/api/schedules/${id}`,
     SEARCH: '/api/schedules/search',
   },
+  ANALYTICS: {
+    ONCALLS: '/api/analytics/oncalls',
+    METRICS_USERS: '/api/analytics/metrics/users',
+    METRICS_RESPONDERS: '/api/analytics/metrics/responders',
+  },
   PAYMENTS: {
     CALCULATE: '/api/payments/calculate',
     EXPORT: '/api/payments/export',
@@ -93,6 +98,7 @@ export const ROUTES = {
   SCHEDULES: '/schedules',
   SCHEDULE_MULTI_GRID: '/schedules/payment-grid',
   SCHEDULE_DETAIL: (id: string) => `/schedules/${id}`,
+  SCHEDULE_ANALYTICS: (id: string) => `/schedules/${id}/analytics`,
   PAYMENTS: '/payments',
   SETTINGS: '/settings',
   DOCUMENTATION: 'https://github.com/lonelydev/caloohpay',
