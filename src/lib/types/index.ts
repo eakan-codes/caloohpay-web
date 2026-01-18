@@ -114,3 +114,61 @@ export interface CompensationRates {
   weekend: number; // Default: £75
   currency: string; // Default: 'GBP'
 }
+
+/**
+ * Analytics: On-call entry from PagerDuty API
+ */
+export interface OnCallEntry {
+  user: User;
+  schedule: {
+    id: string;
+    summary: string;
+    html_url: string;
+  };
+  start: string;
+  end: string;
+}
+
+/**
+ * Analytics: Frequency matrix cell data (hour x day of week)
+ */
+export interface FrequencyMatrixCell {
+  dayOfWeek: number; // 0-6 (Sunday-Saturday)
+  hour: number; // 0-23
+  count: number; // Number of times user was on-call
+}
+
+/**
+ * Analytics: User burden data for distribution chart
+ */
+export interface UserBurdenData {
+  userId: string;
+  userName: string;
+  totalOnCallHours: number;
+  percentage: number;
+}
+
+/**
+ * Analytics: Interruption data from PagerDuty
+ */
+export interface UserInterruptionData {
+  userId: string;
+  userName: string;
+  totalInterruptions: number;
+  totalPay: number;
+}
+
+/**
+ * Analytics: Aggregated analytics data for a schedule
+ */
+export interface ScheduleAnalytics {
+  scheduleId: string;
+  scheduleName: string;
+  dateRange: {
+    since: string;
+    until: string;
+  };
+  frequencyMatrix: Map<string, FrequencyMatrixCell>; // Key: `${userId}-${dayOfWeek}-${hour}`
+  burdenDistribution: UserBurdenData[];
+  interruptionCorrelation: UserInterruptionData[];
+}

@@ -12,13 +12,13 @@ import {
   ToggleButton,
   Tooltip,
 } from '@mui/material';
-import { ArrowBack, ViewList, CalendarMonth } from '@mui/icons-material';
+import { ArrowBack, ViewList, CalendarMonth, Analytics } from '@mui/icons-material';
 import { useCallback, useMemo } from 'react';
 import { Header, Footer } from '@/components/common';
 import MonthNavigation from '@/components/schedules/MonthNavigation';
 import CalendarView from '@/components/schedules/CalendarView';
 import { transformToCalendarEvents } from '@/lib/utils/calendarUtils';
-import { ViewMode } from '@/lib/constants';
+import { ViewMode, ROUTES } from '@/lib/constants';
 import { sanitizeUrl } from '@/lib/utils/urlSanitization';
 import ScheduleHeader from './components/ScheduleHeader';
 import ScheduleActions from './components/ScheduleActions';
@@ -47,6 +47,11 @@ export default function ScheduleDetailPage() {
   const handleBack = useCallback(() => {
     router.push('/schedules');
   }, [router]);
+
+  // Handle analytics navigation
+  const handleAnalytics = useCallback(() => {
+    router.push(ROUTES.SCHEDULE_ANALYTICS(scheduleId));
+  }, [router, scheduleId]);
 
   // Transform schedule entries to calendar events
   const calendarEvents = useMemo(() => {
@@ -123,27 +128,37 @@ export default function ScheduleDetailPage() {
           onBack={handleBack}
         />
 
-        {/* View Mode Toggle */}
+        {/* View Mode Toggle with Analytics Button */}
         <Paper sx={styles.viewModeContainer}>
           <Box sx={styles.viewModeInner}>
-            <ToggleButtonGroup
-              value={viewMode}
-              exclusive
-              onChange={handleViewModeChange}
-              aria-label="view mode"
-              size="small"
-            >
-              <Tooltip title="List View" arrow>
-                <ToggleButton value={ViewMode.List} aria-label="list view">
-                  <ViewList />
-                </ToggleButton>
-              </Tooltip>
-              <Tooltip title="Calendar View" arrow>
-                <ToggleButton value={ViewMode.Calendar} aria-label="calendar view">
-                  <CalendarMonth />
-                </ToggleButton>
-              </Tooltip>
-            </ToggleButtonGroup>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Button
+                variant="outlined"
+                startIcon={<Analytics />}
+                onClick={handleAnalytics}
+                aria-label="View analytics"
+              >
+                Analytics
+              </Button>
+              <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={handleViewModeChange}
+                aria-label="view mode"
+                size="small"
+              >
+                <Tooltip title="List View" arrow>
+                  <ToggleButton value={ViewMode.List} aria-label="list view">
+                    <ViewList />
+                  </ToggleButton>
+                </Tooltip>
+                <Tooltip title="Calendar View" arrow>
+                  <ToggleButton value={ViewMode.Calendar} aria-label="calendar view">
+                    <CalendarMonth />
+                  </ToggleButton>
+                </Tooltip>
+              </ToggleButtonGroup>
+            </Box>
             <MonthNavigation
               currentMonth={currentMonthDisplay}
               isLoading={isLoading}
