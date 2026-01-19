@@ -124,36 +124,73 @@ describe('analyticsUtils', () => {
       expect(result).toEqual([]);
     });
 
-    it('should calculate pay correctly for weekday', () => {
+    it('should calculate pay correctly for weekday qualifying OOH shift', () => {
       const oncalls: OnCallEntry[] = [
         {
           user: { id: '1', summary: 'User 1' },
           schedule: { id: 's1', summary: 'Schedule 1', html_url: 'http://test.com' },
-          start: '2024-01-01T00:00:00Z', // Monday
-          end: '2024-01-01T08:00:00Z', // 8 hours
+          start: '2024-01-01T17:30:00Z', // Monday 17:30 (end of work day)
+          end: '2024-01-02T09:00:00Z', // Tuesday 09:00 (next morning)
         },
       ];
 
       const result = calculateInterruptionCorrelation(oncalls, 50, 75);
 
       expect(result).toHaveLength(1);
-      expect(result[0].totalPay).toBeCloseTo(400, 0); // 8 hours * £50
+      // Qualifies for 1 weekday night (Monday) - shift extends past 17:30 and lasts 15.5 hours
+      expect(result[0].totalPay).toBeCloseTo(50, 0); // 1 night * £50
     });
 
-    it('should calculate pay correctly for weekend', () => {
+    it('should calculate pay correctly for weekend qualifying OOH shift', () => {
       const oncalls: OnCallEntry[] = [
         {
           user: { id: '1', summary: 'User 1' },
           schedule: { id: 's1', summary: 'Schedule 1', html_url: 'http://test.com' },
-          start: '2024-01-05T00:00:00Z', // Friday
-          end: '2024-01-05T08:00:00Z', // 8 hours
+          start: '2024-01-05T17:30:00Z', // Friday 17:30
+          end: '2024-01-06T09:00:00Z', // Saturday 09:00
         },
       ];
 
       const result = calculateInterruptionCorrelation(oncalls, 50, 75);
 
       expect(result).toHaveLength(1);
-      expect(result[0].totalPay).toBeCloseTo(600, 0); // 8 hours * £75
+      // Qualifies for 1 weekend night (Friday) - shift extends past 17:30 and lasts 15.5 hours
+      expect(result[0].totalPay).toBeCloseTo(75, 0); // 1 night * £75
+    });
+
+    it('should not count shifts that do not qualify as OOH', () => {
+      const oncalls: OnCallEntry[] = [
+        {
+          user: { id: '1', summary: 'User 1' },
+          schedule: { id: 's1', summary: 'Schedule 1', html_url: 'http://test.com' },
+          start: '2024-01-01T09:00:00Z', // Monday 09:00
+          end: '2024-01-01T17:00:00Z', // Monday 17:00 (before 17:30 cutoff)
+        },
+      ];
+
+      const result = calculateInterruptionCorrelation(oncalls, 50, 75);
+
+      expect(result).toHaveLength(1);
+      // Does not qualify - doesn't extend past 17:30
+      expect(result[0].totalPay).toBeCloseTo(0, 0);
+    });
+
+    it('should calculate pay for multi-day shifts correctly', () => {
+      const oncalls: OnCallEntry[] = [
+        {
+          user: { id: '1', summary: 'User 1' },
+          schedule: { id: 's1', summary: 'Schedule 1', html_url: 'http://test.com' },
+          start: '2024-01-04T17:30:00Z', // Thursday 17:30
+          end: '2024-01-08T09:00:00Z', // Monday 09:00 (4 nights: Thu, Fri, Sat, Sun)
+        },
+      ];
+
+      const result = calculateInterruptionCorrelation(oncalls, 50, 75);
+
+      expect(result).toHaveLength(1);
+      // Qualifies for: Thursday (weekday), Friday (weekend), Saturday (weekend), Sunday (weekend)
+      // = 1 weekday night + 3 weekend nights
+      expect(result[0].totalPay).toBeCloseTo(50 + 75 * 3, 0); // £50 + £225 = £275
     });
   });
 
