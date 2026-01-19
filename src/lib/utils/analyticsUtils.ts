@@ -130,16 +130,23 @@ export function calculateBurdenDistribution(oncalls: OnCallEntry[]): UserBurdenD
 
 /**
  * Transforms on-call data and payment info into interruption correlation data
- * For MVP, we'll use on-call hours as a proxy for interruptions
+ * Uses incident data from PagerDuty with time-to-resolve as interruption factor
  */
 export function calculateInterruptionCorrelation(
   oncalls: OnCallEntry[],
   weekdayRate: number,
-  weekendRate: number
+  weekendRate: number,
+  incidents?: import('@/lib/types').Incident[]
 ): UserInterruptionData[] {
   const userDataMap = new Map<
     string,
-    { name: string; hours: number; weekdayNights: number; weekendNights: number }
+    {
+      name: string;
+      hours: number;
+      weekdayNights: number;
+      weekendNights: number;
+      interruptionScore: number;
+    }
   >();
 
   // Constants for OOH qualification (matching caloohpay package)
@@ -200,19 +207,70 @@ export function calculateInterruptionCorrelation(
       existing.weekdayNights += weekdayNights;
       existing.weekendNights += weekendNights;
     } else {
-      userDataMap.set(userId, { name: userName, hours, weekdayNights, weekendNights });
+      userDataMap.set(userId, {
+        name: userName,
+        hours,
+        weekdayNights,
+        weekendNights,
+        interruptionScore: 0,
+      });
     }
   });
+
+  // Calculate interruption scores from incidents if provided
+  if (incidents && incidents.length > 0) {
+    incidents.forEach((incident) => {
+      // Find the user this incident was assigned to
+      const assignment = incident.assignments?.[0];
+      if (!assignment) return;
+
+      const userId = assignment.assignee.id;
+      const userData = userDataMap.get(userId);
+      if (!userData) return;
+
+      // Calculate time to resolve in hours
+      if (incident.resolved_at && incident.created_at) {
+        const created = DateTime.fromISO(incident.created_at);
+        const resolved = DateTime.fromISO(incident.resolved_at);
+        const hoursToResolve = resolved.diff(created, 'hours').hours;
+
+        // Apply interruption factor based on time to resolve
+        // Short incident (< 12 hours): factor 0.5 (half day interruption)
+        // Medium incident (12-24 hours): factor 1.0 (full day interruption)
+        // Long incident (24-72 hours): factor 2.0 (multiple day interruption)
+        // Very long incident (> 72 hours): factor 3.0 (severe interruption)
+        let interruptionFactor = 1.0;
+        if (hoursToResolve < 12) {
+          interruptionFactor = 0.5;
+        } else if (hoursToResolve <= 24) {
+          interruptionFactor = 1.0;
+        } else if (hoursToResolve <= 72) {
+          interruptionFactor = 2.0;
+        } else {
+          interruptionFactor = 3.0;
+        }
+
+        userData.interruptionScore += interruptionFactor;
+      } else {
+        // If no resolved_at, count as 1 interruption
+        userData.interruptionScore += 1;
+      }
+    });
+  }
 
   // Convert to array with payment calculated per night
   const correlation: UserInterruptionData[] = [];
   userDataMap.forEach((data, userId) => {
     const pay = data.weekdayNights * weekdayRate + data.weekendNights * weekendRate;
 
+    // Use interruption score if available, otherwise use hours as proxy
+    const interruptions =
+      data.interruptionScore > 0 ? Math.round(data.interruptionScore * 10) / 10 : data.hours;
+
     correlation.push({
       userId,
       userName: data.name,
-      totalInterruptions: Math.round(data.hours), // Using hours as proxy for interruptions
+      totalInterruptions: interruptions,
       totalPay: Math.round(pay * 100) / 100,
     });
   });

@@ -6,7 +6,7 @@
 'use client';
 
 import { Box, Typography, Paper, useTheme, Tooltip } from '@mui/material';
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import type { FrequencyMatrixCell } from '@/lib/types';
 import { getDayName, formatHour } from '@/lib/utils/analyticsUtils';
 import * as styles from './FrequencyMatrix.styles';
@@ -16,7 +16,7 @@ interface FrequencyMatrixProps {
   userName?: string;
 }
 
-export function FrequencyMatrix({ data, userName }: FrequencyMatrixProps) {
+function FrequencyMatrixComponent({ data, userName }: FrequencyMatrixProps) {
   const theme = useTheme();
 
   // Find max count for color scaling
@@ -131,6 +131,9 @@ export function FrequencyMatrix({ data, userName }: FrequencyMatrixProps) {
     </Paper>
   );
 }
+
+// Memoize to prevent unnecessary re-renders
+export const FrequencyMatrix = memo(FrequencyMatrixComponent);
 
 // Helper function to convert hex to RGB
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {

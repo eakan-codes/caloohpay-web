@@ -32,6 +32,7 @@ export default function ScheduleAnalyticsPage() {
   const scheduleId = params?.id as string;
 
   const [oncalls, setOncalls] = useState<OnCallEntry[]>([]);
+  const [incidents, setIncidents] = useState<import('@/lib/types').Incident[]>([]);
   const [scheduleName, setScheduleName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,8 +47,11 @@ export default function ScheduleAnalyticsPage() {
     };
   }, []);
 
-  // Fetch on-call data
+  // Fetch on-call data only once on mount or when session/scheduleId changes
+  // Don't refetch when tab regains focus
   useEffect(() => {
+    let isMounted = true;
+
     const fetchAnalyticsData = async () => {
       if (!session?.accessToken || !scheduleId) {
         return;
@@ -67,12 +71,21 @@ export default function ScheduleAnalyticsPage() {
         }
 
         const scheduleData = await scheduleResponse.json();
+
+        if (!isMounted) return;
         setScheduleName(scheduleData.schedule?.name || 'Unknown Schedule');
 
-        // Fetch on-call data
-        const oncallsResponse = await fetch(
-          `/api/analytics/oncalls?schedule_id=${scheduleId}&since=${dateRange.since}&until=${dateRange.until}`
-        );
+        // Fetch on-call data and incidents in parallel
+        const [oncallsResponse, incidentsResponse] = await Promise.all([
+          fetch(
+            `/api/analytics/oncalls?schedule_id=${scheduleId}&since=${dateRange.since}&until=${dateRange.until}`
+          ),
+          fetch(
+            `/api/analytics/incidents?schedule_id=${scheduleId}&since=${dateRange.since}&until=${dateRange.until}`
+          ).catch(() => null), // Gracefully handle if incidents API fails
+        ]);
+
+        if (!isMounted) return;
 
         if (!oncallsResponse.ok) {
           throw new Error('Failed to fetch on-call data');
@@ -80,15 +93,32 @@ export default function ScheduleAnalyticsPage() {
 
         const oncallsData = await oncallsResponse.json();
         setOncalls(oncallsData.oncalls || []);
+
+        // Set incidents if available
+        if (incidentsResponse && incidentsResponse.ok) {
+          const incidentsData = await incidentsResponse.json();
+          setIncidents(incidentsData.incidents || []);
+        }
       } catch (err) {
+        if (!isMounted) return;
         setError(err instanceof Error ? err.message : 'Failed to load analytics data');
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    fetchAnalyticsData();
-  }, [session, scheduleId, dateRange]);
+    // Only fetch if we don't already have data
+    if (oncalls.length === 0 && !isLoading) {
+      fetchAnalyticsData();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.accessToken, scheduleId]); // Only depend on session and scheduleId, not dateRange
 
   // Transform data for visualizations
   const analyticsData = useMemo(() => {
@@ -108,10 +138,11 @@ export default function ScheduleAnalyticsPage() {
       interruptionCorrelation: calculateInterruptionCorrelation(
         oncalls,
         rates.weekdayRate,
-        rates.weekendRate
+        rates.weekendRate,
+        incidents.length > 0 ? incidents : undefined
       ),
     };
-  }, [oncalls]);
+  }, [oncalls, incidents]);
 
   const handleBack = () => {
     router.push(ROUTES.SCHEDULE_DETAIL(scheduleId));

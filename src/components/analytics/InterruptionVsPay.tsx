@@ -6,6 +6,7 @@
 'use client';
 
 import { Box, Typography, Paper } from '@mui/material';
+import { memo } from 'react';
 import {
   ScatterChart,
   Scatter,
@@ -24,7 +25,7 @@ interface InterruptionVsPayProps {
   data: UserInterruptionData[];
 }
 
-export function InterruptionVsPay({ data }: InterruptionVsPayProps) {
+function InterruptionVsPayComponent({ data }: InterruptionVsPayProps) {
   // Transform data for recharts
   const chartData = data.map((item) => ({
     name: item.userName,
@@ -138,3 +139,6 @@ export function InterruptionVsPay({ data }: InterruptionVsPayProps) {
     </Paper>
   );
 }
+
+// Memoize to prevent unnecessary re-renders
+export const InterruptionVsPay = memo(InterruptionVsPayComponent);

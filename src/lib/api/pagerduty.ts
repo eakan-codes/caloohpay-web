@@ -164,6 +164,56 @@ export class PagerDutyClient {
   }
 
   /**
+   * Fetches incidents for a schedule within a date range
+   * Used for interruption correlation with time-to-resolve data
+   */
+  async getIncidents(
+    scheduleId: string,
+    since: string,
+    until: string
+  ): Promise<import('@/lib/types').Incident[]> {
+    // First, get all users who were on-call during this period
+    const oncalls = await this.getOnCalls(scheduleId, since, until);
+    const userIds = [...new Set(oncalls.map((oncall) => oncall.user.id))];
+
+    if (userIds.length === 0) {
+      return [];
+    }
+
+    const allIncidents: import('@/lib/types').Incident[] = [];
+    let offset = 0;
+    const limit = 100;
+    let hasMore = true;
+
+    // Paginate through all incidents for these users
+    while (hasMore) {
+      const response = await this.client.get('/incidents', {
+        params: {
+          user_ids: userIds,
+          since,
+          until,
+          limit,
+          offset,
+          statuses: ['resolved'], // Only get resolved incidents for time-to-resolve calculation
+        },
+      });
+
+      if (!response.data || !response.data.incidents) {
+        throw new Error('Invalid API response: Missing incidents data');
+      }
+
+      allIncidents.push(...response.data.incidents);
+
+      hasMore = response.data.more === true;
+      if (hasMore) {
+        offset += limit;
+      }
+    }
+
+    return allIncidents;
+  }
+
+  /**
    * Fetches aggregated user analytics for burden distribution
    * Note: This endpoint may require additional permissions
    */

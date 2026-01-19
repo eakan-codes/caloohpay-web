@@ -150,6 +150,23 @@ export interface UserBurdenData {
 }
 
 /**
+ * PagerDuty Incident
+ */
+export interface Incident {
+  id: string;
+  incident_number: number;
+  title: string;
+  status: 'triggered' | 'acknowledged' | 'resolved';
+  created_at: string;
+  resolved_at?: string;
+  urgency: 'high' | 'low';
+  assignments: Array<{
+    at: string;
+    assignee: User;
+  }>;
+}
+
+/**
  * Analytics: Interruption data from PagerDuty
  */
 export interface UserInterruptionData {

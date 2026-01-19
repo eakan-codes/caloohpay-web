@@ -6,6 +6,7 @@
 'use client';
 
 import { Box, Typography, Paper, useTheme } from '@mui/material';
+import { memo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import type { UserBurdenData } from '@/lib/types';
 import * as styles from './BurdenDistribution.styles';
@@ -28,7 +29,7 @@ const COLORS = [
   '#A4DE6C',
 ];
 
-export function BurdenDistribution({ data }: BurdenDistributionProps) {
+function BurdenDistributionComponent({ data }: BurdenDistributionProps) {
   const theme = useTheme();
 
   // Transform data for recharts
@@ -123,3 +124,6 @@ export function BurdenDistribution({ data }: BurdenDistributionProps) {
     </Paper>
   );
 }
+
+// Memoize to prevent unnecessary re-renders
+export const BurdenDistribution = memo(BurdenDistributionComponent);
