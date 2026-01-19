@@ -123,27 +123,44 @@ export class PagerDutyClient {
   /**
    * Fetches on-call entries for a schedule within a date range
    * Used for frequency matrix and burden distribution analytics
+   * Handles pagination automatically to ensure all results are returned
    */
   async getOnCalls(
     scheduleId: string,
     since: string,
     until: string
   ): Promise<import('@/lib/types').OnCallEntry[]> {
-    // PagerDuty API expects schedule_ids[] as an array parameter
-    // Axios will automatically add [] suffix when serializing array params
-    const response = await this.client.get('/oncalls', {
-      params: {
-        schedule_ids: [scheduleId],
-        since,
-        until,
-      },
-    });
+    const allOncalls: import('@/lib/types').OnCallEntry[] = [];
+    let offset = 0;
+    const limit = 100; // PagerDuty max limit per page
+    let hasMore = true;
 
-    if (!response.data || !response.data.oncalls) {
-      throw new Error('Invalid API response: Missing oncalls data');
+    // Paginate through all results
+    while (hasMore) {
+      const response = await this.client.get('/oncalls', {
+        params: {
+          schedule_ids: [scheduleId],
+          since,
+          until,
+          limit,
+          offset,
+        },
+      });
+
+      if (!response.data || !response.data.oncalls) {
+        throw new Error('Invalid API response: Missing oncalls data');
+      }
+
+      allOncalls.push(...response.data.oncalls);
+
+      // Check if there are more results
+      hasMore = response.data.more === true;
+      if (hasMore) {
+        offset += limit;
+      }
     }
 
-    return response.data.oncalls;
+    return allOncalls;
   }
 
   /**

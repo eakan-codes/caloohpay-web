@@ -137,39 +137,83 @@ export function calculateInterruptionCorrelation(
   weekdayRate: number,
   weekendRate: number
 ): UserInterruptionData[] {
-  const userDataMap = new Map<string, { name: string; hours: number; pay: number }>();
+  const userDataMap = new Map<
+    string,
+    { name: string; hours: number; weekdayNights: number; weekendNights: number }
+  >();
+
+  // Constants for OOH qualification (matching caloohpay package)
+  const END_OF_WORK_HOUR = 17.5; // 17:30
+  const MIN_SHIFT_HOURS = 6;
 
   oncalls.forEach((oncall) => {
     const start = DateTime.fromISO(oncall.start);
     const end = DateTime.fromISO(oncall.end);
     const hours = end.diff(start, 'hours').hours;
 
-    // Simple pay calculation based on day of week
-    // Weekend = Friday (5), Saturday (6), Sunday (0)
-    const dayOfWeek = start.weekday % 7;
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6;
-    const pay = isWeekend ? hours * weekendRate : hours * weekdayRate;
-
     const userId = oncall.user.id;
     const userName = oncall.user.summary || oncall.user.name || 'Unknown';
+
+    // Count qualifying OOH nights (days that qualify for payment)
+    let weekdayNights = 0;
+    let weekendNights = 0;
+
+    // Check if shift qualifies as OOH (at least 6 hours and spans multiple days or extends past work hours)
+    if (hours >= MIN_SHIFT_HOURS) {
+      // Iterate through each day in the on-call period
+      let current = start.startOf('day');
+      const endDay = end.startOf('day');
+
+      while (current <= endDay) {
+        const dayStart = current;
+        const dayEnd = current.set({ hour: 23, minute: 59, second: 59 });
+        const endOfWorkDay = current.set({
+          hour: Math.floor(END_OF_WORK_HOUR),
+          minute: (END_OF_WORK_HOUR % 1) * 60,
+        });
+
+        // Check if on-call period covers any time after work hours on this day
+        const shiftStart = start > dayStart ? start : dayStart;
+        const shiftEnd = end < dayEnd ? end : dayEnd;
+
+        // Day qualifies if the shift extends past end of work day (17:30)
+        if (shiftEnd > endOfWorkDay && shiftStart < dayEnd) {
+          // Luxon weekday: 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7=Sun
+          const weekday = current.weekday;
+          // Weekend = Friday (5), Saturday (6), Sunday (7)
+          const isWeekend = weekday === 5 || weekday === 6 || weekday === 7;
+
+          if (isWeekend) {
+            weekendNights++;
+          } else {
+            weekdayNights++;
+          }
+        }
+
+        current = current.plus({ days: 1 });
+      }
+    }
 
     const existing = userDataMap.get(userId);
     if (existing) {
       existing.hours += hours;
-      existing.pay += pay;
+      existing.weekdayNights += weekdayNights;
+      existing.weekendNights += weekendNights;
     } else {
-      userDataMap.set(userId, { name: userName, hours, pay });
+      userDataMap.set(userId, { name: userName, hours, weekdayNights, weekendNights });
     }
   });
 
-  // Convert to array
+  // Convert to array with payment calculated per night
   const correlation: UserInterruptionData[] = [];
   userDataMap.forEach((data, userId) => {
+    const pay = data.weekdayNights * weekdayRate + data.weekendNights * weekendRate;
+
     correlation.push({
       userId,
       userName: data.name,
-      totalInterruptions: Math.round(data.hours), // Using hours as proxy for now
-      totalPay: Math.round(data.pay * 100) / 100,
+      totalInterruptions: Math.round(data.hours), // Using hours as proxy for interruptions
+      totalPay: Math.round(pay * 100) / 100,
     });
   });
 
