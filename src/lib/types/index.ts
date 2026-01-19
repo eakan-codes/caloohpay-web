@@ -136,6 +136,7 @@ export interface FrequencyMatrixCell {
   dayOfWeek: number; // 0-6 (Sunday-Saturday)
   hour: number; // 0-23
   count: number; // Number of times user was on-call
+  users?: { name: string; count: number }[]; // List of users on call during this slot
 }
 
 /**

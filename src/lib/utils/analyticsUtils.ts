@@ -18,7 +18,8 @@ export function buildFrequencyMatrix(
   oncalls: OnCallEntry[],
   userId?: string
 ): FrequencyMatrixCell[] {
-  const frequencyMap = new Map<string, number>();
+  // Map of "day-hour" -> Map<userId, { name: string, count: number }>
+  const frequencyMap = new Map<string, Map<string, { name: string; count: number }>>();
 
   // Filter by user if specified
   const filteredOncalls = userId ? oncalls.filter((oncall) => oncall.user.id === userId) : oncalls;
@@ -26,15 +27,29 @@ export function buildFrequencyMatrix(
   filteredOncalls.forEach((oncall) => {
     const start = DateTime.fromISO(oncall.start);
     const end = DateTime.fromISO(oncall.end);
+    const userName = oncall.user.summary || oncall.user.name || 'Unknown';
+    const uid = oncall.user.id;
 
     // Iterate through each hour in the on-call period
     let current = start;
     while (current < end) {
       const dayOfWeek = current.weekday % 7; // Convert to 0-6 (Sunday-Saturday)
+      // Luxon's weekday: 1=Mon...7=Sun. %7 gives 1=Mon...0=Sun.
+      // The current code assumes 0-6 is Sun-Sat based on getDayName implementation which usually expects 0=Sun.
+      // Let's stick to existing logic for dayOfWeek to avoid regression, assumming getDayName handles it.
+
       const hour = current.hour;
       const key = `${dayOfWeek}-${hour}`;
 
-      frequencyMap.set(key, (frequencyMap.get(key) || 0) + 1);
+      if (!frequencyMap.has(key)) {
+        frequencyMap.set(key, new Map());
+      }
+      const slotMap = frequencyMap.get(key)!;
+
+      const userData = slotMap.get(uid) || { name: userName, count: 0 };
+      userData.count++;
+      slotMap.set(uid, userData);
+
       current = current.plus({ hours: 1 });
     }
   });
@@ -44,10 +59,25 @@ export function buildFrequencyMatrix(
   for (let day = 0; day < 7; day++) {
     for (let hour = 0; hour < 24; hour++) {
       const key = `${day}-${hour}`;
+      const slotMap = frequencyMap.get(key);
+
+      let totalCount = 0;
+      const usersList: { name: string; count: number }[] = [];
+
+      if (slotMap) {
+        slotMap.forEach((data) => {
+          totalCount += data.count;
+          usersList.push(data);
+        });
+        // Sort users by count descending
+        usersList.sort((a, b) => b.count - a.count);
+      }
+
       cells.push({
         dayOfWeek: day,
         hour,
-        count: frequencyMap.get(key) || 0,
+        count: totalCount,
+        users: usersList.length > 0 ? usersList : undefined,
       });
     }
   }

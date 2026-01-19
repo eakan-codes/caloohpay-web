@@ -2,8 +2,8 @@
  * Unit tests for FrequencyMatrix component
  */
 
-import { describe, it, expect } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { FrequencyMatrix } from '../FrequencyMatrix';
 import type { FrequencyMatrixCell } from '@/lib/types';
@@ -72,11 +72,12 @@ describe('FrequencyMatrix', () => {
       const { container } = renderWithTheme(<FrequencyMatrix data={data} />);
 
       // Check that cells with counts are rendered (they may appear multiple times due to MUI)
-      const cellElements = container.querySelectorAll('[title*="shifts"]');
+      // We look for aria-label which replaced the title attribute
+      const cellElements = container.querySelectorAll('[aria-label*="shifts"]');
       expect(cellElements.length).toBeGreaterThan(0);
 
       // Check specific cell exists
-      const cell17 = container.querySelector('[title="Sun 9 AM: 17 shifts"]');
+      const cell17 = container.querySelector('[aria-label="Sun 9 AM: 17 shifts"]');
       expect(cell17).toBeInTheDocument();
     });
 

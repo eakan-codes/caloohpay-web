@@ -5,7 +5,7 @@
 
 'use client';
 
-import { Box, Typography, Paper, useTheme } from '@mui/material';
+import { Box, Typography, Paper, useTheme, Tooltip } from '@mui/material';
 import { useMemo } from 'react';
 import type { FrequencyMatrixCell } from '@/lib/types';
 import { getDayName, formatHour } from '@/lib/utils/analyticsUtils';
@@ -40,17 +40,13 @@ export function FrequencyMatrix({ data, userName }: FrequencyMatrixProps) {
     return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${Math.max(0.2, intensity)})`;
   };
 
-  // Create grid data structure
-  const gridData = useMemo(() => {
-    const grid: number[][] = Array(7)
-      .fill(0)
-      .map(() => Array(24).fill(0));
-
+  // Create fast lookup map for cells
+  const cellMap = useMemo(() => {
+    const map = new Map<string, FrequencyMatrixCell>();
     data.forEach((cell) => {
-      grid[cell.dayOfWeek][cell.hour] = cell.count;
+      map.set(`${cell.dayOfWeek}-${cell.hour}`, cell);
     });
-
-    return grid;
+    return map;
   }, [data]);
 
   return (
@@ -74,21 +70,50 @@ export function FrequencyMatrix({ data, userName }: FrequencyMatrixProps) {
         </Box>
 
         {/* Grid with day labels and cells */}
-        {gridData.map((dayData, dayIndex) => (
+        {Array.from({ length: 7 }).map((_, dayIndex) => (
           <Box key={dayIndex} sx={styles.gridRow}>
             <Box sx={styles.dayLabel}>{getDayName(dayIndex)}</Box>
-            {dayData.map((count, hour) => (
-              <Box
-                key={`${dayIndex}-${hour}`}
-                sx={{
-                  ...styles.gridCell,
-                  backgroundColor: getColor(count),
-                }}
-                title={`${getDayName(dayIndex)} ${formatHour(hour)}: ${count} shifts`}
-              >
-                {count > 0 && <Typography sx={styles.cellText}>{count}</Typography>}
-              </Box>
-            ))}
+            {Array.from({ length: 24 }).map((_, hour) => {
+              const cell = cellMap.get(`${dayIndex}-${hour}`);
+              const count = cell?.count || 0;
+
+              const summaryText = `${getDayName(dayIndex)} ${formatHour(hour)}: ${count} shifts`;
+
+              const tooltipContent = (
+                <Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                    {getDayName(dayIndex)} {formatHour(hour)}
+                  </Typography>
+                  <Typography variant="body2" gutterBottom>
+                    Total shifts: {count}
+                  </Typography>
+                  {cell?.users && cell.users.length > 0 && (
+                    <Box component="ul" sx={{ pl: 2, m: 0, fontSize: '0.75rem' }}>
+                      {cell.users.slice(0, 5).map((u, i) => (
+                        <li key={i}>
+                          {u.name}: {u.count}
+                        </li>
+                      ))}
+                      {cell.users.length > 5 && <li>+ {cell.users.length - 5} more</li>}
+                    </Box>
+                  )}
+                </Box>
+              );
+
+              return (
+                <Tooltip key={`${dayIndex}-${hour}`} title={tooltipContent} arrow placement="top">
+                  <Box
+                    aria-label={summaryText}
+                    sx={{
+                      ...styles.gridCell,
+                      backgroundColor: getColor(count),
+                    }}
+                  >
+                    {count > 0 && <Typography sx={styles.cellText}>{count}</Typography>}
+                  </Box>
+                </Tooltip>
+              );
+            })}
           </Box>
         ))}
       </Box>

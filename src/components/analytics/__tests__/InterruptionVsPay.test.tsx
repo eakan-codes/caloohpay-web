@@ -2,8 +2,8 @@
  * Unit tests for InterruptionVsPay component
  */
 
-import { describe, it, expect } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { InterruptionVsPay } from '../InterruptionVsPay';
 import type { UserInterruptionData } from '@/lib/types';

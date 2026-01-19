@@ -129,13 +129,15 @@ export class PagerDutyClient {
     since: string,
     until: string
   ): Promise<import('@/lib/types').OnCallEntry[]> {
-    const params: Record<string, string> = {
-      schedule_ids: scheduleId,
-      since,
-      until,
-    };
-
-    const response = await this.client.get('/oncalls', { params });
+    // PagerDuty API expects schedule_ids[] as an array parameter
+    // Axios will automatically add [] suffix when serializing array params
+    const response = await this.client.get('/oncalls', {
+      params: {
+        schedule_ids: [scheduleId],
+        since,
+        until,
+      },
+    });
 
     if (!response.data || !response.data.oncalls) {
       throw new Error('Invalid API response: Missing oncalls data');

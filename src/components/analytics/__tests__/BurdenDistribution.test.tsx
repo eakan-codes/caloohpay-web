@@ -2,8 +2,8 @@
  * Unit tests for BurdenDistribution component
  */
 
-import { describe, it, expect } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { BurdenDistribution } from '../BurdenDistribution';
 import type { UserBurdenData } from '@/lib/types';
