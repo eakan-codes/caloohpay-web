@@ -5,10 +5,11 @@
 
 'use client';
 
-import { Box, Typography, Paper, useTheme } from '@mui/material';
+import { Box, Typography, Paper } from '@mui/material';
 import { memo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import type { UserBurdenData } from '@/lib/types';
+import { HelpModal } from '@/components/common/HelpModal';
 import * as styles from './BurdenDistribution.styles';
 
 interface BurdenDistributionProps {
@@ -30,8 +31,6 @@ const COLORS = [
 ];
 
 function BurdenDistributionComponent({ data }: BurdenDistributionProps) {
-  const theme = useTheme();
-
   // Transform data for recharts
   const chartData = data.map((item) => ({
     name: item.userName,
@@ -47,9 +46,35 @@ function BurdenDistributionComponent({ data }: BurdenDistributionProps) {
 
   return (
     <Paper sx={styles.container}>
-      <Typography variant="h6" gutterBottom>
-        Burden Distribution
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+        <Typography variant="h6">Burden Distribution</Typography>
+        <HelpModal
+          title="Burden Distribution"
+          description="A pie chart showing how on-call time is distributed across team members as a percentage of the total on-call hours."
+          howToRead={
+            <Box component="ul" sx={{ pl: 2, m: 0 }}>
+              <li>Each slice represents one team member</li>
+              <li>Slice size is proportional to their total on-call hours</li>
+              <li>Percentages show each person&apos;s share of the total burden</li>
+              <li>Hover over slices to see exact hours and percentages</li>
+              <li>Legend on the right shows names and total hours</li>
+            </Box>
+          }
+          value={
+            <Box>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                This visualization helps you:
+              </Typography>
+              <Box component="ul" sx={{ pl: 2, m: 0 }}>
+                <li>Identify uneven distribution of on-call duties</li>
+                <li>Ensure fair rotation and prevent burnout</li>
+                <li>Spot team members who may need support or backup</li>
+                <li>Make data-driven decisions about rotation adjustments</li>
+              </Box>
+            </Box>
+          }
+        />
+      </Box>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         Percentage of total on-call time per team member
       </Typography>
@@ -99,7 +124,7 @@ function BurdenDistributionComponent({ data }: BurdenDistributionProps) {
                 layout="vertical"
                 align="right"
                 verticalAlign="middle"
-                formatter={(value, entry) => {
+                formatter={(value) => {
                   const item = data.find((d) => d.userName === value);
                   return `${value} (${item?.totalOnCallHours.toFixed(1)}h)`;
                 }}

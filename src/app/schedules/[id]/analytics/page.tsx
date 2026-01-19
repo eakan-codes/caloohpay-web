@@ -7,14 +7,15 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Box, Typography, Button, CircularProgress, Alert, Paper } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import { ArrowBack, Refresh } from '@mui/icons-material';
 import { DateTime } from 'luxon';
 import { Header, Footer } from '@/components/common';
 import { FrequencyMatrix } from '@/components/analytics/FrequencyMatrix';
 import { BurdenDistribution } from '@/components/analytics/BurdenDistribution';
 import { InterruptionVsPay } from '@/components/analytics/InterruptionVsPay';
+import { DateRangePicker } from '@/components/analytics/DateRangePicker';
 import {
   buildFrequencyMatrix,
   calculateBurdenDistribution,
@@ -37,17 +38,25 @@ export default function ScheduleAnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get date range for last 6 months
-  const dateRange = useMemo(() => {
+  // Default to last 6 months, but allow user customization
+  const [dateRange, setDateRange] = useState(() => {
     const now = DateTime.now();
     const sixMonthsAgo = now.minus({ months: 6 });
     return {
-      since: sixMonthsAgo.toISO(),
-      until: now.toISO(),
+      since: sixMonthsAgo.toISO() || '',
+      until: now.toISO() || '',
     };
+  });
+
+  // Handle date range change from picker
+  const handleDateRangeChange = useCallback((since: string, until: string) => {
+    setDateRange({ since, until });
+    // Clear existing data to trigger refetch
+    setOncalls([]);
+    setIncidents([]);
   }, []);
 
-  // Fetch on-call data only once on mount or when session/scheduleId changes
+  // Fetch on-call data when date range changes
   // Don't refetch when tab regains focus
   useEffect(() => {
     let isMounted = true;
@@ -109,7 +118,7 @@ export default function ScheduleAnalyticsPage() {
       }
     };
 
-    // Only fetch if we don't already have data
+    // Only fetch if we don't already have data for this date range
     if (oncalls.length === 0 && !isLoading) {
       fetchAnalyticsData();
     }
@@ -118,7 +127,7 @@ export default function ScheduleAnalyticsPage() {
       isMounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.accessToken, scheduleId]); // Only depend on session and scheduleId, not dateRange
+  }, [session?.accessToken, scheduleId, dateRange.since, dateRange.until]);
 
   // Transform data for visualizations
   const analyticsData = useMemo(() => {
@@ -188,10 +197,31 @@ export default function ScheduleAnalyticsPage() {
           <Typography variant="h6" color="text.secondary" gutterBottom>
             {scheduleName}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Data for the past 6 months ({DateTime.fromISO(dateRange.since).toFormat('MMM d, yyyy')}{' '}
-            - {DateTime.fromISO(dateRange.until).toFormat('MMM d, yyyy')})
-          </Typography>
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 2, mt: 2 }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {DateTime.fromISO(dateRange.since).toFormat('MMM d, yyyy')} -{' '}
+              {DateTime.fromISO(dateRange.until).toFormat('MMM d, yyyy')}
+            </Typography>
+            <DateRangePicker
+              currentSince={dateRange.since}
+              currentUntil={dateRange.until}
+              onDateRangeChange={handleDateRangeChange}
+            />
+            <Button
+              variant="text"
+              size="small"
+              startIcon={<Refresh />}
+              onClick={() => {
+                setOncalls([]);
+                setIncidents([]);
+              }}
+              disabled={isLoading}
+            >
+              Refresh
+            </Button>
+          </Box>
         </Paper>
 
         {isLoading ? (

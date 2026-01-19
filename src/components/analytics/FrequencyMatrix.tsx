@@ -9,6 +9,7 @@ import { Box, Typography, Paper, useTheme, Tooltip } from '@mui/material';
 import { useMemo, memo } from 'react';
 import type { FrequencyMatrixCell } from '@/lib/types';
 import { getDayName, formatHour } from '@/lib/utils/analyticsUtils';
+import { HelpModal } from '@/components/common/HelpModal';
 import * as styles from './FrequencyMatrix.styles';
 
 interface FrequencyMatrixProps {
@@ -51,9 +52,35 @@ function FrequencyMatrixComponent({ data, userName }: FrequencyMatrixProps) {
 
   return (
     <Paper sx={styles.container}>
-      <Typography variant="h6" gutterBottom>
-        Frequency Matrix {userName ? `- ${userName}` : ''}
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+        <Typography variant="h6">Frequency Matrix {userName ? `- ${userName}` : ''}</Typography>
+        <HelpModal
+          title="Frequency Matrix"
+          description="A heat map showing when on-call shifts occur most frequently throughout the week. Each cell represents a specific hour of a specific day."
+          howToRead={
+            <Box component="ul" sx={{ pl: 2, m: 0 }}>
+              <li>Rows represent days of the week (Sunday through Saturday)</li>
+              <li>Columns represent hours of the day (0-23 in 24-hour format)</li>
+              <li>Color intensity shows frequency: darker = more shifts during that time</li>
+              <li>Numbers in cells indicate total shift count for that time slot</li>
+              <li>Hover over cells to see which team members were on-call and how often</li>
+            </Box>
+          }
+          value={
+            <Box>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                This visualization helps you:
+              </Typography>
+              <Box component="ul" sx={{ pl: 2, m: 0 }}>
+                <li>Identify peak on-call hours and days</li>
+                <li>Spot patterns in shift distribution</li>
+                <li>Ensure fair rotation across the team</li>
+                <li>Plan staffing adjustments for high-frequency periods</li>
+              </Box>
+            </Box>
+          }
+        />
+      </Box>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         Shows when on-call shifts occur most frequently
       </Typography>

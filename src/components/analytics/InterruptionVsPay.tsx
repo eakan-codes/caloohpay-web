@@ -19,6 +19,7 @@ import {
 } from 'recharts';
 import type { UserInterruptionData } from '@/lib/types';
 import { PAYMENT_RATES } from '@/lib/constants';
+import { HelpModal } from '@/components/common/HelpModal';
 import * as styles from './InterruptionVsPay.styles';
 
 interface InterruptionVsPayProps {
@@ -35,9 +36,43 @@ function InterruptionVsPayComponent({ data }: InterruptionVsPayProps) {
 
   return (
     <Paper sx={styles.container}>
-      <Typography variant="h6" gutterBottom>
-        Interruption vs Pay Correlation
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+        <Typography variant="h6">Interruption vs Pay Correlation</Typography>
+        <HelpModal
+          title="Interruption vs Pay Correlation"
+          description="A scatter plot showing the relationship between work interruptions (from incidents) and compensation for on-call duties."
+          howToRead={
+            <Box component="ul" sx={{ pl: 2, m: 0 }}>
+              <li>Each dot represents one team member</li>
+              <li>X-axis shows total compensation (in GBP)</li>
+              <li>Y-axis shows interruption score based on incidents handled</li>
+              <li>
+                Interruption score factors in time-to-resolve:
+                <Box component="ul" sx={{ pl: 2, mt: 1 }}>
+                  <li>&lt; 12 hours: 0.5x (quick resolution)</li>
+                  <li>12-24 hours: 1.0x (standard incident)</li>
+                  <li>24-72 hours: 2.0x (extended disruption)</li>
+                  <li>&gt; 72 hours: 3.0x (severe interruption)</li>
+                </Box>
+              </li>
+              <li>Hover over dots to see individual details</li>
+            </Box>
+          }
+          value={
+            <Box>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                This visualization helps you:
+              </Typography>
+              <Box component="ul" sx={{ pl: 2, m: 0 }}>
+                <li>Assess if compensation aligns with actual work burden</li>
+                <li>Identify team members with high interruptions relative to pay</li>
+                <li>Make informed decisions about compensation adjustments</li>
+                <li>Understand the true cost of incidents beyond just on-call time</li>
+              </Box>
+            </Box>
+          }
+        />
+      </Box>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         Relationship between on-call hours and compensation
       </Typography>
