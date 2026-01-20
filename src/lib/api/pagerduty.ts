@@ -124,40 +124,69 @@ export class PagerDutyClient {
    * Fetches on-call entries for a schedule within a date range
    * Used for frequency matrix and burden distribution analytics
    * Handles pagination automatically to ensure all results are returned
+   * Also handles chunking for large date ranges (PagerDuty limits queries to ~90 days)
    */
   async getOnCalls(
     scheduleId: string,
     since: string,
     until: string
   ): Promise<import('@/lib/types').OnCallEntry[]> {
+    const { DateTime } = await import('luxon');
     const allOncalls: import('@/lib/types').OnCallEntry[] = [];
-    let offset = 0;
-    const limit = 100; // PagerDuty max limit per page
-    let hasMore = true;
 
-    // Paginate through all results
-    while (hasMore) {
-      const response = await this.client.get('/oncalls', {
-        params: {
-          schedule_ids: [scheduleId],
-          since,
-          until,
-          limit,
-          offset,
-        },
-      });
+    const start = DateTime.fromISO(since, { setZone: true });
+    const end = DateTime.fromISO(until, { setZone: true });
 
-      if (!response.data || !response.data.oncalls) {
-        throw new Error('Invalid API response: Missing oncalls data');
+    if (!start.isValid || !end.isValid) {
+      throw new Error('Invalid date format for oncalls request');
+    }
+
+    // PagerDuty limits oncalls queries to ~90 days, so we need to chunk large date ranges
+    const MAX_RANGE_DAYS = 90;
+    let cursor = start;
+
+    while (cursor < end) {
+      const segmentEnd = cursor.plus({ days: MAX_RANGE_DAYS });
+      const windowEnd = segmentEnd < end ? segmentEnd : end;
+
+      const cursorIso = cursor.toISO();
+      const windowEndIso = windowEnd.toISO();
+
+      if (!cursorIso || !windowEndIso) {
+        throw new Error('Failed to generate ISO date string for pagination');
       }
 
-      allOncalls.push(...response.data.oncalls);
+      // Fetch this chunk with pagination
+      let offset = 0;
+      const limit = 100; // PagerDuty max limit per page
+      let hasMore = true;
 
-      // Check if there are more results
-      hasMore = response.data.more === true;
-      if (hasMore) {
-        offset += limit;
+      while (hasMore) {
+        const response = await this.client.get('/oncalls', {
+          params: {
+            schedule_ids: [scheduleId],
+            since: cursorIso,
+            until: windowEndIso,
+            limit,
+            offset,
+          },
+        });
+
+        if (!response.data || !response.data.oncalls) {
+          throw new Error('Invalid API response: Missing oncalls data');
+        }
+
+        allOncalls.push(...response.data.oncalls);
+
+        // Check if there are more results in this chunk
+        hasMore = response.data.more === true;
+        if (hasMore) {
+          offset += limit;
+        }
       }
+
+      // Move to next chunk
+      cursor = windowEnd;
     }
 
     return allOncalls;
