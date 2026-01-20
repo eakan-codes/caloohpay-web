@@ -8,13 +8,14 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Box, Typography, Button, CircularProgress, Alert, Paper } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, Alert, Paper, Tabs, Tab } from '@mui/material';
 import { ArrowBack, Refresh } from '@mui/icons-material';
 import { DateTime } from 'luxon';
 import { Header, Footer } from '@/components/common';
 import { FrequencyMatrix } from '@/components/analytics/FrequencyMatrix';
 import { BurdenDistribution } from '@/components/analytics/BurdenDistribution';
 import { InterruptionVsPay } from '@/components/analytics/InterruptionVsPay';
+import { RotationStripPlot } from '@/components/analytics/RotationStripPlot';
 import { DateRangePicker } from '@/components/analytics/DateRangePicker';
 import {
   buildFrequencyMatrix,
@@ -37,6 +38,7 @@ export default function ScheduleAnalyticsPage() {
   const [scheduleName, setScheduleName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentTab, setCurrentTab] = useState(0);
 
   // Default to last 6 months, but allow user customization
   const [dateRange, setDateRange] = useState(() => {
@@ -233,14 +235,39 @@ export default function ScheduleAnalyticsPage() {
           </Box>
         ) : (
           <>
-            {/* Frequency Matrix */}
-            <FrequencyMatrix data={analyticsData.frequencyMatrix} />
+            {/* Tabs for different visualization views */}
+            <Paper sx={{ mb: 3 }}>
+              <Tabs
+                value={currentTab}
+                onChange={(_, newValue) => setCurrentTab(newValue)}
+                aria-label="Analytics visualization tabs"
+                sx={{ borderBottom: 1, borderColor: 'divider' }}
+              >
+                <Tab label="Rhythm View" id="tab-0" aria-controls="tabpanel-0" />
+                <Tab label="Frequency Matrix" id="tab-1" aria-controls="tabpanel-1" />
+                <Tab label="Burden Distribution" id="tab-2" aria-controls="tabpanel-2" />
+                <Tab label="Interruption vs Pay" id="tab-3" aria-controls="tabpanel-3" />
+              </Tabs>
+            </Paper>
 
-            {/* Burden Distribution */}
-            <BurdenDistribution data={analyticsData.burdenDistribution} />
+            {/* Tab Panels */}
+            <Box role="tabpanel" hidden={currentTab !== 0} id="tabpanel-0" aria-labelledby="tab-0">
+              {currentTab === 0 && <RotationStripPlot data={oncalls} />}
+            </Box>
 
-            {/* Interruption vs Pay */}
-            <InterruptionVsPay data={analyticsData.interruptionCorrelation} />
+            <Box role="tabpanel" hidden={currentTab !== 1} id="tabpanel-1" aria-labelledby="tab-1">
+              {currentTab === 1 && <FrequencyMatrix data={analyticsData.frequencyMatrix} />}
+            </Box>
+
+            <Box role="tabpanel" hidden={currentTab !== 2} id="tabpanel-2" aria-labelledby="tab-2">
+              {currentTab === 2 && <BurdenDistribution data={analyticsData.burdenDistribution} />}
+            </Box>
+
+            <Box role="tabpanel" hidden={currentTab !== 3} id="tabpanel-3" aria-labelledby="tab-3">
+              {currentTab === 3 && (
+                <InterruptionVsPay data={analyticsData.interruptionCorrelation} />
+              )}
+            </Box>
           </>
         )}
       </Box>
