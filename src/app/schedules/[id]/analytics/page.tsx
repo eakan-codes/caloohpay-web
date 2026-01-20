@@ -35,7 +35,7 @@ export default function ScheduleAnalyticsPage() {
   const [oncalls, setOncalls] = useState<OnCallEntry[]>([]);
   const [incidents, setIncidents] = useState<import('@/lib/types').Incident[]>([]);
   const [scheduleName, setScheduleName] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Default to last 6 months, but allow user customization
