@@ -153,11 +153,33 @@ _Note: Rates can be customized in Settings page_
 - `FrequencyMatrix.test.tsx`: 10 tests for heatmap component
 - `BurdenDistribution.test.tsx`: 8 tests for pie chart component
 - `InterruptionVsPay.test.tsx`: 7 tests for scatter plot component
+- `HelpModal.test.tsx`: 10 tests for help modal functionality
+- `DateRangePicker.test.tsx`: 10 tests for date range picker component
+
+### E2E Tests
+
+- `analytics.spec.ts`: Comprehensive end-to-end tests for analytics page
+  - Analytics page navigation and loading
+  - Tab interface functionality (Rhythm View, Frequency Matrix, Burden Distribution, Interruption vs Pay)
+  - Tab switching and persistence
+  - Help modal interactions for all visualizations
+  - Date range picker with quick select buttons and validation
+  - Refresh functionality
+  - Back navigation to schedule detail page
+  - Console error checking
+  - Data visualization rendering
 
 ### Running Tests
 
 ```bash
+# Run unit tests
 npm test -- --testPathPatterns=analytics
+
+# Run E2E tests
+npx playwright test tests/e2e/analytics.spec.ts
+
+# Run all E2E tests
+npm run test:e2e
 ```
 
 ## Dependencies
