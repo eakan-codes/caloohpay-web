@@ -55,7 +55,7 @@ describe('ScheduleMultiSelect', () => {
       json: async () => ({ schedules: mockSchedules }),
     });
 
-    useSession.mockReturnValue({
+    (useSession as jest.Mock).mockReturnValue({
       data: {
         accessToken: 'mock-token',
         user: { email: 'test@example.com' },
@@ -227,7 +227,7 @@ describe('ScheduleMultiSelect', () => {
 
   describe('Session Handling', () => {
     it('should not fetch without session token', async () => {
-      useSession.mockReturnValue({
+      (useSession as jest.Mock).mockReturnValue({
         data: null,
         status: 'unauthenticated',
       });

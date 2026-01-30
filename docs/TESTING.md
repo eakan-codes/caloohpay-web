@@ -83,17 +83,20 @@ npm test -- --testNamePattern="progressive search"
 Run tests with pre-seeded NextAuth JWT session:
 
 ```bash
-# Run all seeded tests (all 3 browsers: chromium, firefox, webkit)
+# Run seeded tests for chromium only (default, fastest)
 npm run test:e2e:seeded
 
-# Run seeded tests in UI mode (interactive)
+# Run seeded tests for all 3 browsers (chromium, firefox, webkit)
+npm run test:e2e:seeded:all
+
+# Run seeded tests in UI mode (interactive, all browsers)
 npm run test:e2e:seeded:ui
 
-# Run seeded tests for specific file
-npm run test:e2e:seeded -- tests/e2e/settings.spec.ts
+# Run seeded tests for specific browser using shell script
+./scripts/e2e-seeded.sh firefox
 
-# Run seeded tests for single browser
-npm run test:e2e:seeded -- --project="chromium (seeded)"
+# Run seeded tests for all browsers using shell script
+./scripts/e2e-run.sh auth headless
 ```
 
 #### Unauth Tests (Unauthenticated)
@@ -104,23 +107,23 @@ Run tests without authentication to test login and redirect flows:
 # Run all unauth tests (all 3 browsers)
 npm run test:e2e:unauth
 
-# Run unauth tests in UI mode (interactive)
+# Run unauth tests in UI mode (interactive, all browsers)
 npm run test:e2e:unauth:ui
 
-# Run unauth tests for specific file
-npm run test:e2e:unauth -- tests/e2e/auth.spec.ts
+# Run unauth tests for specific browser using shell script
+./scripts/e2e-unauth.sh chromium
 
-# Run unauth tests for single browser
-npm run test:e2e:unauth -- --project="chromium (unauth)"
+# Run unauth tests for all browsers using shell script
+./scripts/e2e-unauth.sh all  # or ./scripts/e2e-run.sh unauth headless
 ```
 
 #### Basic E2E (All Projects)
 
 ```bash
-# Run all configured projects (seeded + unauth)
+# Run all configured projects (seeded + unauth, all browsers)
 npm run test:e2e
 
-# Run with UI
+# Run with UI (interactive mode)
 npm run test:e2e:ui
 
 # View HTML report of last run
@@ -129,14 +132,42 @@ npm run test:e2e:report
 
 #### Shell Script Wrappers
 
-For advanced usage, shell scripts are available and automatically set environment variables:
+The shell scripts provide a simplified interface:
+
+**Seeded tests (`e2e-seeded.sh`):**
 
 ```bash
-# Seeded with custom args
-./scripts/e2e-seeded.sh tests/e2e/settings.spec.ts
+# Syntax: ./scripts/e2e-seeded.sh [browser]
+# browser: chromium (default), firefox, or webkit
 
-# Unauth with custom args
-./scripts/e2e-unauth.sh tests/e2e/auth.spec.ts
+./scripts/e2e-seeded.sh              # Chromium only
+./scripts/e2e-seeded.sh firefox      # Firefox only
+./scripts/e2e-seeded.sh webkit       # Webkit only
+```
+
+**Unauth tests (`e2e-unauth.sh`):**
+
+```bash
+# Syntax: ./scripts/e2e-unauth.sh [browser]
+# browser: chromium, firefox, webkit, or all (default)
+
+./scripts/e2e-unauth.sh              # All browsers
+./scripts/e2e-unauth.sh all          # All browsers (explicit)
+./scripts/e2e-unauth.sh chromium     # Chromium only
+```
+
+**Advanced usage (`e2e-run.sh`):**
+
+```bash
+# Syntax: ./scripts/e2e-run.sh <auth-mode> <display-mode> [projects...]
+# auth-mode: 'auth' or 'unauth'
+# display-mode: 'headed' (UI) or 'headless' (standard)
+# projects: (optional) --project flags, if omitted runs all projects
+
+# Examples:
+./scripts/e2e-run.sh auth headless --project="chromium (seeded)"
+./scripts/e2e-run.sh unauth headed --project="firefox (unauth)"
+./scripts/e2e-run.sh auth headless  # All seeded projects
 ```
 
 ## Playwright Configuration

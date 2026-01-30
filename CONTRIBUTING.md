@@ -292,7 +292,7 @@ Add screenshots or GIFs
 Before submitting a PR:
 
 1. **Run unit tests**: `npm test`
-2. **Run E2E tests**: `npm run test:e2e:seeded` (faster for development)
+2. **Run E2E tests**: `npm run test:e2e:seeded` (fastest - chromium only)
 3. **Check coverage**: `npm run test:coverage` (target >80%)
 
 For comprehensive testing guidance, see [docs/TESTING.md](docs/TESTING.md), which covers:
@@ -307,9 +307,10 @@ For comprehensive testing guidance, see [docs/TESTING.md](docs/TESTING.md), whic
 ```bash
 npm test                      # All unit tests
 npm run test:watch           # Watch mode
-npm run test:e2e:seeded      # E2E authenticated tests (3 browsers)
-npm run test:e2e:seeded -- --project="chromium (seeded)"  # Single browser (faster)
-npm run test:e2e:unauth      # E2E login/redirect tests
+npm run test:e2e:seeded      # E2E authenticated tests (chromium only, fastest)
+npm run test:e2e:seeded:all  # E2E authenticated tests (all 3 browsers)
+./scripts/e2e-seeded.sh firefox  # Single browser via shell script
+npm run test:e2e:unauth      # E2E login/redirect tests (all browsers)
 ```
 
 ### Test Requirements for PRs

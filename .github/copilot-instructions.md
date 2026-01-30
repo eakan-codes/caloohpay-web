@@ -165,10 +165,11 @@ npm run type-check       # TypeScript validation (no emit)
   - Coverage: `npm run test:coverage` (target >80%)
   - 226+ tests across 15+ test suites (96.5% unit, 3.5% E2E)
 - **E2E tests**: Playwright with chromium, firefox, webkit ([tests/e2e/](tests/e2e/))
-  - **Seeded tests** (authenticated): `npm run test:e2e:seeded` - Uses pre-seeded NextAuth JWT session
-  - **Unauth tests**: `npm run test:e2e:unauth` - Tests unauthenticated flows
-  - **Regular E2E**: `npm run test:e2e` - Standard E2E without session seeding
-  - Debug: `npm run test:e2e:ui` or `npm run test:e2e:seeded:ui` (interactive mode)
+  - **Seeded tests** (authenticated): `npm run test:e2e:seeded` - Chromium only (fastest)
+  - **Seeded all browsers**: `npm run test:e2e:seeded:all` - All 3 browsers
+  - **Unauth tests**: `npm run test:e2e:unauth` - All browsers, unauthenticated flows
+  - **Regular E2E**: `npm run test:e2e` - All projects (seeded + unauth)
+  - **Debug UI mode**: `npm run test:e2e:seeded:ui` or `npm run test:e2e:unauth:ui`
   - Report: `npm run test:e2e:report` - View HTML test report
 - **Test structure**: Mirror `src/` structure in `tests/unit/`
 - Mock PagerDuty API calls in tests - never use real credentials
@@ -478,7 +479,8 @@ All UI components must meet WCAG 2.1 Level AA standards:
 - **Seeded tests**: Use `npm run test:e2e:seeded` when testing authenticated flows
   - Session seed created in `tests/e2e/.auth/seed.ts`
   - Uses JWT strategy to bypass OAuth during tests
-  - Seed scripts in `scripts/` directory (`e2e-seeded.sh`, `e2e-unauth.sh`)
+  - Shell scripts: `e2e-seeded.sh [browser]`, `e2e-unauth.sh [browser|all]`
+  - Core runner: `e2e-run.sh <auth|unauth> <headed|headless> [--project=...]`
 
 ### Jest Configuration
 

@@ -91,9 +91,7 @@ export class PagerDutyClient {
     timezone?: string
   ): Promise<PagerDutySchedule[]> {
     const results = await Promise.allSettled(
-      scheduleIds.map((scheduleId) =>
-        this.getSchedule(scheduleId, since, until, timezone)
-      )
+      scheduleIds.map((scheduleId) => this.getSchedule(scheduleId, since, until, timezone))
     );
 
     results.forEach((result, index) => {
@@ -104,9 +102,7 @@ export class PagerDutyClient {
 
     return results
       .filter(
-        (
-          result
-        ): result is PromiseFulfilledResult<PagerDutySchedule> =>
+        (result): result is PromiseFulfilledResult<PagerDutySchedule> =>
           result.status === 'fulfilled'
       )
       .map((result) => result.value);
@@ -122,6 +118,168 @@ export class PagerDutyClient {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Fetches on-call entries for a schedule within a date range
+   * Used for frequency matrix and burden distribution analytics
+   * Handles pagination automatically to ensure all results are returned
+   * Also handles chunking for large date ranges (PagerDuty limits queries to ~90 days)
+   */
+  async getOnCalls(
+    scheduleId: string,
+    since: string,
+    until: string
+  ): Promise<import('@/lib/types').OnCallEntry[]> {
+    const { DateTime } = await import('luxon');
+    const allOncalls: import('@/lib/types').OnCallEntry[] = [];
+
+    const start = DateTime.fromISO(since, { setZone: true });
+    const end = DateTime.fromISO(until, { setZone: true });
+
+    if (!start.isValid || !end.isValid) {
+      throw new Error('Invalid date format for oncalls request');
+    }
+
+    // PagerDuty limits oncalls queries to ~90 days, so we need to chunk large date ranges
+    const MAX_RANGE_DAYS = 90;
+    let cursor = start;
+
+    while (cursor < end) {
+      const segmentEnd = cursor.plus({ days: MAX_RANGE_DAYS });
+      const windowEnd = segmentEnd < end ? segmentEnd : end;
+
+      const cursorIso = cursor.toISO();
+      const windowEndIso = windowEnd.toISO();
+
+      if (!cursorIso || !windowEndIso) {
+        throw new Error('Failed to generate ISO date string for pagination');
+      }
+
+      // Fetch this chunk with pagination
+      let offset = 0;
+      const limit = 100; // PagerDuty max limit per page
+      let hasMore = true;
+
+      while (hasMore) {
+        const response = await this.client.get('/oncalls', {
+          params: {
+            schedule_ids: [scheduleId],
+            since: cursorIso,
+            until: windowEndIso,
+            limit,
+            offset,
+          },
+        });
+
+        if (!response.data || !response.data.oncalls) {
+          throw new Error('Invalid API response: Missing oncalls data');
+        }
+
+        allOncalls.push(...response.data.oncalls);
+
+        // Check if there are more results in this chunk
+        hasMore = response.data.more === true;
+        if (hasMore) {
+          offset += limit;
+        }
+      }
+
+      // Move to next chunk
+      cursor = windowEnd;
+    }
+
+    return allOncalls;
+  }
+
+  /**
+   * Fetches incidents for a schedule within a date range
+   * Used for interruption correlation with time-to-resolve data
+   */
+  async getIncidents(
+    scheduleId: string,
+    since: string,
+    until: string
+  ): Promise<import('@/lib/types').Incident[]> {
+    // First, get all users who were on-call during this period
+    const oncalls = await this.getOnCalls(scheduleId, since, until);
+    const userIds = [...new Set(oncalls.map((oncall) => oncall.user.id))];
+
+    if (userIds.length === 0) {
+      return [];
+    }
+
+    const allIncidents: import('@/lib/types').Incident[] = [];
+    let offset = 0;
+    const limit = 100;
+    let hasMore = true;
+
+    // Paginate through all incidents for these users
+    while (hasMore) {
+      const response = await this.client.get('/incidents', {
+        params: {
+          user_ids: userIds,
+          since,
+          until,
+          limit,
+          offset,
+          statuses: ['resolved'], // Only get resolved incidents for time-to-resolve calculation
+        },
+      });
+
+      if (!response.data || !response.data.incidents) {
+        throw new Error('Invalid API response: Missing incidents data');
+      }
+
+      allIncidents.push(...response.data.incidents);
+
+      hasMore = response.data.more === true;
+      if (hasMore) {
+        offset += limit;
+      }
+    }
+
+    return allIncidents;
+  }
+
+  /**
+   * Fetches aggregated user analytics for burden distribution
+   * Note: This endpoint may require additional permissions
+   */
+  async getUserMetrics(since: string, until: string): Promise<unknown> {
+    const params: Record<string, string> = {
+      since,
+      until,
+    };
+
+    const response = await this.client.post('/analytics/metrics/users/all', params);
+
+    if (!response.data) {
+      throw new Error('Invalid API response: Missing user metrics data');
+    }
+
+    return response.data;
+  }
+
+  /**
+   * Fetches responder analytics including interruption data
+   * Note: This endpoint may require additional permissions
+   */
+  async getResponderMetrics(userId: string, since: string, until: string): Promise<unknown> {
+    const params: Record<string, string> = {
+      since,
+      until,
+    };
+
+    const response = await this.client.get(`/analytics/raw/responders/${userId}/incidents`, {
+      params,
+    });
+
+    if (!response.data) {
+      throw new Error('Invalid API response: Missing responder metrics data');
+    }
+
+    return response.data;
   }
 }
 

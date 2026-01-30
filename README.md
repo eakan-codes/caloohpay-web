@@ -155,8 +155,9 @@ Quick commands:
 npm test                      # Run all unit tests
 npm run test:watch           # Run tests in watch mode
 npm run test:coverage        # Generate coverage report
-npm run test:e2e:seeded      # Run E2E tests (pre-authenticated)
-npm run test:e2e:unauth      # Run E2E tests (login flows)
+npm run test:e2e:seeded      # Run E2E tests (pre-authenticated, chromium only)
+npm run test:e2e:seeded:all  # Run E2E tests (pre-authenticated, all browsers)
+npm run test:e2e:unauth      # Run E2E tests (login flows, all browsers)
 ```
 
 ## 🏗️ Project Structure
