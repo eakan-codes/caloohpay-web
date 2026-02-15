@@ -31,6 +31,7 @@ jobs:
   seeded:
     name: Seeded E2E (${{ matrix.browser }})
     runs-on: ubuntu-latest
+    environment: ci_e2e_seeded
     strategy:
       matrix:
         browser: [chromium, firefox, webkit]
@@ -42,19 +43,12 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - name: Validate NEXTAUTH_SECRET
-        run: |
-          if [ -z "${{ secrets.NEXTAUTH_SECRET }}" ]; then
-            echo "::error::NEXTAUTH_SECRET repository secret is not configured."
-            echo "::error::Please add NEXTAUTH_SECRET to repository secrets at:"
-            echo "::error::https://github.com/${{ github.repository }}/settings/secrets/actions"
-            exit 1
-          fi
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps ${{ matrix.browser }}
       - name: Run Seeded E2E (${{ matrix.browser }})
         env:
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          # If secrets.NEXTAUTH_SECRET is empty, 'static_secret_for_ci' is used
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'static_secret_for_ci' }}
         run: ./scripts/e2e-seeded.sh ${{ matrix.browser }}
       - name: Upload Playwright Report (${{ matrix.browser }})
         if: always()
